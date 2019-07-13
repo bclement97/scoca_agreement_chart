@@ -1,8 +1,8 @@
 import re
 import urllib
 
-from .constants import regex
-from .constants.constants import DATE_FORMAT
+from constants import DATE_FORMAT
+import regex
 
 
 def filters_to_url_params(filter_dict, begin='?'):

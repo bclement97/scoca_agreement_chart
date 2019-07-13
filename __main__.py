@@ -1,7 +1,7 @@
 import click as cli
 import requests
 
-from .constants.constants import DOCKET_LIST_FILTERS
+from .constants import DOCKET_LIST_FILTERS
 from .utils import filters_to_url_params
 
 
