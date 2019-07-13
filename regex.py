@@ -1,4 +1,5 @@
-"""
+"""REGEX MODULE
+
 It is recommended to always use OPINION_REGEX with re.findall() or re.finditer() since it will always match
 OPINION_REGEX_MAJORITY before matching OPINION_REGEX_SECONDARY. If not, matches of OPINION_REGEX_MAJORITY must be
 removed from the search string before attempting to match OPINION_REGEX_SECONDARY which can wrongly include what should
@@ -8,14 +9,22 @@ The unicode and case-insensitive flag should be set in most cases. This is becau
 to typos, or minor differences in punctuation between published opinions and may need to be
 updated accordingly and/or handled manually.
 
-Capturing Groups (in order, (*) denotes present but may be empty):
-- OPINION_MAJORITY (3): authoring justice, concurring chief justice (*), concurring assoc. justices
-- OPINION_SECONDARY (4): authoring justice, opinion type, concurring chief justice (*), concurring assoc. justices (*)
-- OPINION (7): groups of OPINION_MAJORITY followed by groups of OPINION_SECONDARY
+Capturing Groups (by index, (*) denotes present but may be empty):
+- OPINION_MAJORITY:
+    0. Authoring Justice
+    1. Concurring Chief Justice (*)
+    2. Concurring assoc. Justices
+- OPINION_SECONDARY:
+    0. Authoring Justice
+    1. Opinion type
+    2. Concurring Chief Justice (*)
+    3. Concurring assoc. Justices (*)
+- OPINION: groups of OPINION_MAJORITY followed by groups of OPINION_SECONDARY
 """
 
 import re
 
+# Matches and returns the name of a Justice
 _JUSTICE = r'Justice ([^.,]+?)'
 # Matches and returns the name of the authoring Justice of the opinion.
 _OPINION_AUTHOR = r'(?:Chief )?' + _JUSTICE + ' (?:authored|filed) '
@@ -35,6 +44,6 @@ DOCKET_NUM = r'\bS\d+\b'
 
 
 def normalize_whitespace(text):
-    """Converts whitespace and literal newlines ('\' followed by 'n') to a single space character.
+    """Converts literal newlines ('\' followed by 'n') and whitespace (including Unicode) to a single space character.
     """
     return re.sub(r'(?:\\n|\s)+', ' ', text, flags=re.UNICODE)
