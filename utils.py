@@ -12,8 +12,18 @@ def filters_to_url_params(filter_dict, begin='?'):
     """
     params = []
     for k, v in filter_dict.items():
-        k_quote = urllib.quote(k, safe='!')
-        v_quote = urllib.quote(','.join(v) if isinstance(v, list) else v, safe=',')
+        # URL encode the key except for the last char if it's an exclamation mark. See:
+        # https://www.courtlistener.com/api/rest-info/?#field-selection
+        if k[-1] == '!':
+            k_quote = urllib.quote(k[:-1]) + '!'
+        else:
+            k_quote = urllib.quote(k)
+        # URL encode the value. If a list, encoded elements will be joined with commas. See:
+        # https://www.courtlistener.com/api/rest-info/?#field-selection
+        if isinstance(v, list):
+            v_quote = ','.join(map(urllib.quote, v))
+        else:
+            v_quote = urllib.quote(v)
         param_str = '{}={}'.format(k_quote, v_quote)
         params.append(param_str)
     return begin + '&'.join(params)
