@@ -1,7 +1,9 @@
+import os
 import re
 import urllib
+import warnings
 
-from constants import DATE_FORMAT
+from constants import DATE_FORMAT, DEFAULT_REQUESTS_HEADER
 import regex
 
 
@@ -36,7 +38,17 @@ def date_to_str(date):
 def get_docket_number(text):
     docket_nums = re.findall(regex.DOCKET_NUM, text)
     if len(docket_nums) == 0:
-        raise RuntimeError('No docket number found')
+        raise RuntimeError('No docket number found.')
     elif len(set(docket_nums)) > 1:
-        raise RuntimeError('Multiple docket numbers found')
+        raise RuntimeError('Multiple docket numbers found.')
     return docket_nums[0]
+
+
+def get_requests_header():
+    header = DEFAULT_REQUESTS_HEADER.copy()
+    token = os.environ.get('COURTLISTENER_API_TOKEN')
+    if token:
+        header['Authorization'] = 'Token {}'.format(token)
+    else:
+        warnings.warn('No Court Listener API authorization token found.', RuntimeWarning)
+    return header

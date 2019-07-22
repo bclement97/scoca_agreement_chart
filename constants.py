@@ -15,3 +15,5 @@ OPINION_INSTANCE_ENDPOINT = 'https://www.courtlistener.com/api/rest/v3/opinions/
 OPINION_INSTANCE_FILTERS = {
     'fields': ['id', 'plain_text'],
 }
+
+DEFAULT_REQUESTS_HEADER = {'Accept': 'application/json'}
