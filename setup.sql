@@ -18,13 +18,13 @@ CREATE TABLE case_filings (
 CREATE INDEX IDX_CaseFilings_PublishedOn ON case_filings(published_on);
 
 CREATE TABLE opinion_types (
-    id      INTEGER         PRIMARY KEY AUTOINCREMENT,
+    id      INTEGER         PRIMARY KEY,
     type    VARCHAR(255)    UNIQUE      NOT NULL
 );
-INSERT INTO opinion_types(type) VALUES ('Majority');
-INSERT INTO opinion_types(type) VALUES ('Concurring');
-INSERT INTO opinion_types(type) VALUES ('Dissenting');
-INSERT INTO opinion_types(type) VALUES ('Concurring and Dissenting');
+INSERT INTO opinion_types VALUES (0, 'Majority');
+INSERT INTO opinion_types VALUES (1, 'Concurring');
+INSERT INTO opinion_types VALUES (2, 'Dissenting');
+INSERT INTO opinion_types VALUES (3, 'Concurring and Dissenting');
 
 CREATE TABLE opinions (
     id                      INTEGER         PRIMARY KEY AUTOINCREMENT,
