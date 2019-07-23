@@ -1,4 +1,4 @@
-PRAGMA foreign_keys = ON;  -- For SQLite only.
+PRAGMA foreign_keys = ON;  -- For SQLite only. Off by default.
 
 CREATE TABLE justices (
     id          INTEGER         PRIMARY KEY             AUTOINCREMENT,
@@ -16,9 +16,9 @@ CREATE TABLE case_filings (
     published_on    DATE                            NOT NULL,
 -- When the filing was added locally.
     added_on        TIMESTAMP                       NOT NULL    DEFAULT CURRENT_TIMESTAMP,
--- When official changes were made made to the filing.
+-- When official changes were last made made to the filing.
     modified_on     DATE                                        DEFAULT NULL,
--- When official changes were updated locally.
+-- When changes were last made locally.
     updated_on      TIMESTAMP                                   DEFAULT NULL,
     reviewer        VARCHAR(255)                                DEFAULT NULL,
     reviewed_on     TIMESTAMP                                   DEFAULT NULL
@@ -39,6 +39,7 @@ CREATE TABLE opinion_types (
     id      INTEGER         PRIMARY KEY,
     type    VARCHAR(255)    UNIQUE      NOT NULL
 );
+-- TODO: Move to Python module setup/init?
 INSERT INTO opinion_types VALUES (0, 'Majority');
 INSERT INTO opinion_types VALUES (1, 'Concurring');
 INSERT INTO opinion_types VALUES (2, 'Dissenting');
