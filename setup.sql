@@ -5,13 +5,15 @@ CREATE TABLE justices (
 );
 
 CREATE TABLE case_filings (
-    docket_num      VARCHAR(8)      PRIMARY KEY,
+    docket_num      VARCHAR(255)    PRIMARY KEY,
     url             VARCHAR(255)    UNIQUE          NOT NULL,
     plain_text      CLOB            NOT NULL,
     plain_text_hash CHAR(64)        UNIQUE          NOT NULL,
     published_on    DATE            NOT NULL,
-    reviewer        VARCHAR(255),
-    reviewed_on     TIMESTAMP
+    added_on        DATE            NOT NULL        DEFAULT CURRENT_TIMESTAMP,
+    updated_on      DATE            DEFAULT NULL,
+    reviewer        VARCHAR(255)    DEFAULT NULL,
+    reviewed_on     TIMESTAMP       DEFAULT NULL
 );
 
 CREATE TABLE opinion_types (
@@ -24,10 +26,10 @@ INSERT INTO opinion_types(type) VALUES ('Dissenting');
 INSERT INTO opinion_types(type) VALUES ('Concurring and Dissenting');
 
 CREATE TABLE opinions (
-    id                      INTEGER     PRIMARY KEY AUTOINCREMENT,
-    case_filing_docket_num  VARCHAR(8),
-    opinion_type_id         INTEGER,
-    authoring_justice_id    INTEGER,
+    id                      INTEGER         PRIMARY KEY AUTOINCREMENT,
+    case_filing_docket_num  VARCHAR(255)    NOT NULL,
+    opinion_type_id         INTEGER         NOT NULL,
+    authoring_justice_id    INTEGER         NOT NULL,
 
     CONSTRAINT FK_Opinion_CaseFiling FOREIGN KEY (case_filing_docket_num)
         REFERENCES case_filings(docket_num),
@@ -38,9 +40,9 @@ CREATE TABLE opinions (
 );
 
 CREATE TABLE concurrences (
-    id          INTEGER    PRIMARY KEY AUTOINCREMENT,
-    opinion_id  INTEGER,
-    justice_id  INTEGER,
+    id          INTEGER     PRIMARY KEY AUTOINCREMENT,
+    opinion_id  INTEGER     NOT NULL,
+    justice_id  INTEGER     NOT NULL,
 
     CONSTRAINT FK_Concurrence_Opinion FOREIGN KEY (opinion_id)
         REFERENCES opinions(id),
