@@ -10,7 +10,7 @@ CREATE TABLE case_filings (
     docket_num      VARCHAR(255)    PRIMARY KEY,
     url             VARCHAR(255)                    NOT NULL,
     plain_text      CLOB                            NOT NULL,
--- Use to check for updates?
+-- TODO: Use to check for updates?
     plain_text_hash VARCHAR(255)                    NOT NULL,
 -- When the filing was officially published.
     published_on    DATE                            NOT NULL,
