@@ -1,7 +1,7 @@
 PRAGMA foreign_keys = ON;  -- For SQLite only.
 
 CREATE TABLE justices (
-    id          INTEGER         PRIMARY KEY AUTOINCREMENT,
+    id          INTEGER         PRIMARY KEY             AUTOINCREMENT,
     name        VARCHAR(255)    UNIQUE      NOT NULL,
     shorthand   VARCHAR(5)      UNIQUE      NOT NULL
 );
@@ -9,14 +9,19 @@ CREATE TABLE justices (
 CREATE TABLE case_filings (
     docket_num      VARCHAR(255)    PRIMARY KEY,
     url             VARCHAR(255)    UNIQUE          NOT NULL,
-    plain_text      CLOB            NOT NULL,
-    plain_text_hash CHAR(64)        UNIQUE          NOT NULL,   -- Use to check for updates?
-    published_on    DATE            NOT NULL,                   -- When the filing was officially published.
-    added_on        TIMESTAMP       NOT NULL        DEFAULT CURRENT_TIMESTAMP,  -- When the filing was added locally.
-    modified_on     DATE            DEFAULT NULL,               -- When official changes were made made to the filing.
-    updated_on      TIMESTAMP       DEFAULT CURRENT_TIMESTAMP,  -- When the above official changes were updated locally.
-    reviewer        VARCHAR(255)    DEFAULT NULL,
-    reviewed_on     TIMESTAMP       DEFAULT NULL
+    plain_text      CLOB                            NOT NULL,
+-- Use to check for updates?
+    plain_text_hash CHAR(64)        UNIQUE          NOT NULL,
+-- When the filing was officially published.
+    published_on    DATE                            NOT NULL,
+-- When the filing was added locally.
+    added_on        TIMESTAMP                       NOT NULL    DEFAULT CURRENT_TIMESTAMP,
+-- When official changes were made made to the filing.
+    modified_on     DATE                                        DEFAULT NULL,
+-- When official changes were updated locally.
+    updated_on      TIMESTAMP                                   DEFAULT NULL,
+    reviewer        VARCHAR(255)                                DEFAULT NULL,
+    reviewed_on     TIMESTAMP                                   DEFAULT NULL
 );
 CREATE INDEX IDX_CaseFilings_PublishedOn ON case_filings(published_on);
 
@@ -30,10 +35,10 @@ INSERT INTO opinion_types VALUES (2, 'Dissenting');
 INSERT INTO opinion_types VALUES (3, 'Concurring and Dissenting');
 
 CREATE TABLE opinions (
-    id                      INTEGER         PRIMARY KEY AUTOINCREMENT,
-    case_filing_docket_num  VARCHAR(255)    NOT NULL,
-    opinion_type_id         INTEGER         NOT NULL,
-    authoring_justice_id    INTEGER         NOT NULL,
+    id                      INTEGER         PRIMARY KEY             AUTOINCREMENT,
+    case_filing_docket_num  VARCHAR(255)                NOT NULL,
+    opinion_type_id         INTEGER                     NOT NULL,
+    authoring_justice_id    INTEGER                     NOT NULL,
 
     CONSTRAINT FK_Opinion_CaseFiling FOREIGN KEY (case_filing_docket_num)
         REFERENCES case_filings(docket_num),
@@ -47,9 +52,9 @@ CREATE INDEX IDX_Opinions_OpinionTypeId ON opinions(opinion_type_id);
 CREATE INDEX IDX_Opinions_AuthoringJusticeId ON opinions(authoring_justice_id);
 
 CREATE TABLE concurrences (
-    id          INTEGER     PRIMARY KEY AUTOINCREMENT,
-    opinion_id  INTEGER     NOT NULL,
-    justice_id  INTEGER     NOT NULL,
+    id          INTEGER     PRIMARY KEY             AUTOINCREMENT,
+    opinion_id  INTEGER                 NOT NULL,
+    justice_id  INTEGER                 NOT NULL,
 
     CONSTRAINT FK_Concurrence_Opinion FOREIGN KEY (opinion_id)
         REFERENCES opinions(id),
