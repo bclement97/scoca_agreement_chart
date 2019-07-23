@@ -1,3 +1,5 @@
+PRAGMA foreign_keys = ON;  -- For SQLite only.
+
 CREATE TABLE justices (
     id          INTEGER         PRIMARY KEY AUTOINCREMENT,
     name        VARCHAR(255)    UNIQUE      NOT NULL,
