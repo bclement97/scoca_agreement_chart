@@ -8,10 +8,11 @@ CREATE TABLE case_filings (
     docket_num      VARCHAR(255)    PRIMARY KEY,
     url             VARCHAR(255)    UNIQUE          NOT NULL,
     plain_text      CLOB            NOT NULL,
-    plain_text_hash CHAR(64)        UNIQUE          NOT NULL,
-    published_on    DATE            NOT NULL,
-    added_on        DATE            NOT NULL        DEFAULT CURRENT_TIMESTAMP,
-    updated_on      DATE            DEFAULT NULL,
+    plain_text_hash CHAR(64)        UNIQUE          NOT NULL,   -- Use to check for updates?
+    published_on    DATE            NOT NULL,                   -- When the filing was officially published.
+    added_on        TIMESTAMP       NOT NULL        DEFAULT CURRENT_TIMESTAMP,  -- When the filing was added locally.
+    modified_on     DATE            DEFAULT NULL,               -- When official changes were made made to the filing.
+    updated_on      TIMESTAMP       DEFAULT CURRENT_TIMESTAMP,  -- When the above official changes were updated locally.
     reviewer        VARCHAR(255)    DEFAULT NULL,
     reviewed_on     TIMESTAMP       DEFAULT NULL
 );
