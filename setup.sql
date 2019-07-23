@@ -15,6 +15,7 @@ CREATE TABLE case_filings (
     reviewer        VARCHAR(255)    DEFAULT NULL,
     reviewed_on     TIMESTAMP       DEFAULT NULL
 );
+CREATE INDEX IDX_CaseFilings_PublishedOn ON case_filings(published_on);
 
 CREATE TABLE opinion_types (
     id      INTEGER         PRIMARY KEY AUTOINCREMENT,
@@ -38,6 +39,9 @@ CREATE TABLE opinions (
     CONSTRAINT FK_Opinion_Justice FOREIGN KEY (authoring_justice_id)
         REFERENCES justices(id)
 );
+CREATE INDEX IDX_Opinions_CaseFilingDocketNum ON opinions(case_filing_docket_num);
+CREATE INDEX IDX_Opinions_OpinionTypeId ON opinions(opinion_type_id);
+CREATE INDEX IDX_Opinions_AuthoringJusticeId ON opinions(authoring_justice_id);
 
 CREATE TABLE concurrences (
     id          INTEGER     PRIMARY KEY AUTOINCREMENT,
@@ -49,3 +53,5 @@ CREATE TABLE concurrences (
     CONSTRAINT FK_Concurrence_Justice FOREIGN KEY (justice_id)
         REFERENCES justices(id)
 );
+CREATE INDEX IDX_Concurrences_OpinionId ON concurrences(opinion_id);
+CREATE INDEX IDX_Concurrences_AuthoringJusticeId ON concurrences(justice_id);
