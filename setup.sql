@@ -25,6 +25,15 @@ CREATE TABLE case_filings (
 );
 CREATE INDEX IDX_CaseFilings_PublishedOn
     ON case_filings(published_on);
+CREATE TRIGGER TR_CaseFilings_AfterUpdate
+    AFTER UPDATE ON case_filings
+    FOR EACH ROW
+    WHEN OLD.updated_on IS NULL OR NEW.updated_on < OLD.updated_on  -- Prevents infinite recursion.
+    BEGIN
+        UPDATE case_filings
+            SET updated_on = CURRENT_TIMESTAMP
+            WHERE docket_num = OLD.docket_num;
+    END;
 
 CREATE TABLE opinion_types (
     id      INTEGER         PRIMARY KEY,
