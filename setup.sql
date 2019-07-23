@@ -40,12 +40,10 @@ CREATE TABLE opinions (
     opinion_type_id         INTEGER                     NOT NULL,
     authoring_justice_id    INTEGER                     NOT NULL,
 
-    CONSTRAINT FK_Opinion_CaseFiling FOREIGN KEY (case_filing_docket_num)
-        REFERENCES case_filings(docket_num),
-    CONSTRAINT FK_Opinion_OpinionType FOREIGN KEY (opinion_type_id)
-        REFERENCES opinion_types(id),
-    CONSTRAINT FK_Opinion_Justice FOREIGN KEY (authoring_justice_id)
-        REFERENCES justices(id)
+    CONSTRAINT FK_Opinions_CaseFilings FOREIGN KEY (case_filing_docket_num) REFERENCES case_filings(docket_num),
+    CONSTRAINT FK_Opinions_OpinionTypes FOREIGN KEY (opinion_type_id) REFERENCES opinion_types(id),
+    CONSTRAINT FK_Opinions_Justices FOREIGN KEY (authoring_justice_id) REFERENCES justices(id),
+    CONSTRAINT UQ_Opinions UNIQUE (case_filing_docket_num, opinion_type_id, authoring_justice_id)
 );
 CREATE INDEX IDX_Opinions_CaseFilingDocketNum ON opinions(case_filing_docket_num);
 CREATE INDEX IDX_Opinions_OpinionTypeId ON opinions(opinion_type_id);
@@ -56,10 +54,9 @@ CREATE TABLE concurrences (
     opinion_id  INTEGER                 NOT NULL,
     justice_id  INTEGER                 NOT NULL,
 
-    CONSTRAINT FK_Concurrence_Opinion FOREIGN KEY (opinion_id)
-        REFERENCES opinions(id),
-    CONSTRAINT FK_Concurrence_Justice FOREIGN KEY (justice_id)
-        REFERENCES justices(id)
+    CONSTRAINT FK_Concurrences_Opinions FOREIGN KEY (opinion_id) REFERENCES opinions(id),
+    CONSTRAINT FK_Concurrences_Justices FOREIGN KEY (justice_id) REFERENCES justices(id),
+    CONSTRAINT UQ_Concurrences UNIQUE (opinion_id, justice_id)
 );
 CREATE INDEX IDX_Concurrences_OpinionId ON concurrences(opinion_id);
-CREATE INDEX IDX_Concurrences_AuthoringJusticeId ON concurrences(justice_id);
+CREATE INDEX IDX_Concurrences_JusticeId ON concurrences(justice_id);
