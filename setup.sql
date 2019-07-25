@@ -3,15 +3,15 @@ PRAGMA foreign_keys = ON;  -- For SQLite only. Off by default.
 ----- JUSTICES -----
 
 CREATE TABLE justices (
-    id          INTEGER         PRIMARY KEY             AUTOINCREMENT,
-    name        VARCHAR(255)    UNIQUE      NOT NULL,
-    shorthand   VARCHAR(5)      UNIQUE      NOT NULL
+    id          INTEGER         PRIMARY KEY                 AUTOINCREMENT,
+    name        VARCHAR(255)    UNIQUE          NOT NULL,
+    shorthand   VARCHAR(5)      UNIQUE          NOT NULL
 );
 
 ----- CASE FILINGS -----
 
 CREATE TABLE case_filings (
-    docket_num      VARCHAR(255)    PRIMARY KEY,
+    docket_number   VARCHAR(255)    PRIMARY KEY,
     url             VARCHAR(255)                    NOT NULL,
     plain_text      CLOB                            NOT NULL,
 -- TODO: Use to check for updates?
@@ -38,14 +38,14 @@ CREATE TRIGGER TR_CaseFilings_AfterUpdate
     BEGIN
         UPDATE case_filings
             SET updated_on = CURRENT_TIMESTAMP
-            WHERE docket_num = OLD.docket_num;
+            WHERE docket_number = OLD.docket_number;
     END;
 
 ----- OPINION TYPES -----
 
 CREATE TABLE opinion_types (
     id      INTEGER         PRIMARY KEY,
-    type    VARCHAR(255)    UNIQUE      NOT NULL
+    type    VARCHAR(255)    UNIQUE          NOT NULL
 );
 
 -- TODO: Move to Python module setup/init?
@@ -57,17 +57,17 @@ INSERT INTO opinion_types VALUES (3, 'Concurring and Dissenting');
 ----- OPINIONS -----
 
 CREATE TABLE opinions (
-    id                      INTEGER         PRIMARY KEY             AUTOINCREMENT,
-    case_filing_docket_num  VARCHAR(255)                NOT NULL,
-    opinion_type_id         INTEGER                     NOT NULL,
-    authoring_justice_id    INTEGER                     NOT NULL,
+    id                          INTEGER         PRIMARY KEY                 AUTOINCREMENT,
+    case_filing_docket_number   VARCHAR(255)                    NOT NULL,
+    opinion_type_id             INTEGER                         NOT NULL,
+    authoring_justice_id        INTEGER                         NOT NULL,
 
     CONSTRAINT UQ_Opinions
-        UNIQUE (case_filing_docket_num, opinion_type_id, authoring_justice_id),
+        UNIQUE (case_filing_docket_number, opinion_type_id, authoring_justice_id),
 
     CONSTRAINT FK_Opinions_CaseFilings
-        FOREIGN KEY (case_filing_docket_num)
-        REFERENCES case_filings(docket_num),
+        FOREIGN KEY (case_filing_docket_number)
+        REFERENCES case_filings(docket_number),
 
     CONSTRAINT FK_Opinions_OpinionTypes
         FOREIGN KEY (opinion_type_id)
@@ -79,7 +79,7 @@ CREATE TABLE opinions (
 );
 
 CREATE INDEX IDX_Opinions_CaseFilingDocketNum
-    ON opinions(case_filing_docket_num);
+    ON opinions(case_filing_docket_number);
 
 CREATE INDEX IDX_Opinions_OpinionTypeId
     ON opinions(opinion_type_id);
@@ -90,9 +90,9 @@ CREATE INDEX IDX_Opinions_AuthoringJusticeId
 ----- CONCURRENCES -----
 
 CREATE TABLE concurrences (
-    id          INTEGER     PRIMARY KEY             AUTOINCREMENT,
-    opinion_id  INTEGER                 NOT NULL,
-    justice_id  INTEGER                 NOT NULL,
+    id          INTEGER     PRIMARY KEY                 AUTOINCREMENT,
+    opinion_id  INTEGER                     NOT NULL,
+    justice_id  INTEGER                     NOT NULL,
 
     CONSTRAINT UQ_Concurrences
         UNIQUE (opinion_id, justice_id),
