@@ -9,11 +9,19 @@ DOCKET_LIST_FILTERS = {
 }
 OPINION_CLUSTER_ENDPOINT = 'https://www.courtlistener.com/api/rest/v3/clusters/{}/'  # {} is ID
 OPINION_CLUSTER_FILTERS = {
-    'fields': ['id', 'absolute_url', 'sub_opinions', 'date_filed', 'date_filed_is_approximate'],
+    # As of 25-Jun-2019, the CourtListener API implementation always sets the following fields as such, but would be
+    # useful for our purposes if the implementation changes in the future:
+    # - panel, non_participating_judges, judges: empty/null
+    'fields': ['id', 'absolute_url', 'panel', 'non_participating_judges', 'sub_opinions', 'judges', 'date_filed',
+               'date_filed_is_approximate']
 }
 OPINION_INSTANCE_ENDPOINT = 'https://www.courtlistener.com/api/rest/v3/opinions/{}/'  # {} is ID
 OPINION_INSTANCE_FILTERS = {
-    'fields': ['id', 'plain_text'],
+    # As of 25-Jun-2019, the CourtListener API implementation always sets the following fields as such, but would be
+    # useful for our purposes if the implementation changes in the future:
+    # - author, joined_by, author_str: empty/null
+    # - type: '010combined'
+    'fields': ['id', 'author', 'joined_by', 'author_str', 'type', 'sha1', 'download_url', 'plain_text'],
 }
 
 DEFAULT_REQUESTS_HEADER = {'Accept': 'application/json'}
