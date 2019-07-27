@@ -4,11 +4,14 @@ import cachecontrol
 import click as cli
 import requests
 
-from .constants import DOCKET_LIST_ENDPOINT, DOCKET_LIST_FILTERS
+from .constants import DOCKET_LIST_ENDPOINT, DOCKET_LIST_FILTERS, OPINION_CLUSTER_ENDPOINT, OPINION_CLUSTER_FILTERS
 from .utils import filters_to_url_params, get_requests_header
 
 
 class CaseFiling(object):
+    # Default to no HTTP Session
+    _http_session = requests
+
     def __init__(self, docket_entry):
         self._docket_entry = docket_entry
         self._opinion_cluster = self.__get_opinion_cluster()
@@ -25,10 +28,26 @@ class CaseFiling(object):
     def published_on(self):
         raise NotImplementedError
 
+    @staticmethod
+    def set_http_session(http_session):
+        CaseFiling._http_session = http_session
+
     def __get_opinion_cluster(self):
         if len(self._docket_entry['clusters']) != 1:
-            raise NotImplementedError  # TODO (custom unexpected value error?)
-        raise NotImplementedError
+            raise ValueError  # TODO (custom unexpected value error?)
+
+        filtered_endpoint = OPINION_CLUSTER_ENDPOINT + filters_to_url_params(OPINION_CLUSTER_FILTERS)
+        response = CaseFiling._http_session.get(filtered_endpoint)
+
+        try:
+            response.raise_for_status()  # HTTPError
+            response_json = response.json()  # ValueError
+        except requests.HTTPError:
+            raise NotImplementedError  # TODO
+        except ValueError:
+            raise NotImplementedError  # TODO
+
+        return response_json
 
     def __str__(self):
         return self.docket_number
@@ -62,6 +81,7 @@ def get_active_docket(http_session, filters=DOCKET_LIST_FILTERS):
 def main():
     http_session = requests.Session()
     http_session.headers = get_requests_header()
+    CaseFiling.set_http_session(http_session)
 
     active_docket = get_active_docket(http_session)
     print(repr(active_docket[0]))
