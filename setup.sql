@@ -16,8 +16,8 @@ CREATE TABLE case_filings (
     plain_text      CLOB                            NOT NULL,
 -- TODO: Use to check for updates?
     plain_text_hash VARCHAR(255)                    NOT NULL,
--- When the filing was officially published.
-    published_on    DATE                            NOT NULL,
+-- When the filing was officially filed.
+    filed_on        DATE                            NOT NULL,
 -- When the filing was added locally.
     added_on        TIMESTAMP                       NOT NULL    DEFAULT CURRENT_TIMESTAMP,
 -- When official changes were last made made to the filing.
@@ -29,7 +29,7 @@ CREATE TABLE case_filings (
 );
 
 CREATE INDEX IDX_CaseFilings_PublishedOn
-    ON case_filings(published_on);
+    ON case_filings(filed_on);
 
 CREATE TRIGGER TR_CaseFilings_AfterUpdate
     AFTER UPDATE ON case_filings
