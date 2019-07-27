@@ -36,7 +36,7 @@ class CaseFiling(object):
         if len(self._docket_entry['clusters']) != 1:
             raise ValueError  # TODO (custom unexpected value error?)
 
-        filtered_endpoint = OPINION_CLUSTER_ENDPOINT + filters_to_url_params(OPINION_CLUSTER_FILTERS)
+        filtered_endpoint = self._docket_entry['clusters'][0] + filters_to_url_params(OPINION_CLUSTER_FILTERS)
         response = CaseFiling._http_session.get(filtered_endpoint)
         return get_response_json(response)
 
