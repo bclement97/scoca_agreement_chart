@@ -4,7 +4,7 @@ import cachecontrol
 import click as cli
 import requests
 
-from .constants import DOCKET_LIST_ENDPOINT, DOCKET_LIST_FILTERS, OPINION_CLUSTER_ENDPOINT, OPINION_CLUSTER_FILTERS
+from .constants import DOCKET_LIST_ENDPOINT, DOCKET_LIST_FILTERS, OPINION_CLUSTER_FILTERS, COURTLISTENER_BASE_URL
 from .utils import filters_to_url_params, get_requests_header, get_response_json
 
 
@@ -22,11 +22,11 @@ class CaseFiling(object):
 
     @property
     def url(self):
-        raise NotImplementedError
+        return COURTLISTENER_BASE_URL + self._opinion_cluster['absolute_url']
 
     @property
     def published_on(self):
-        raise NotImplementedError
+        return self._opinion_cluster['date_filed']
 
     @staticmethod
     def set_http_session(http_session):
