@@ -3,6 +3,8 @@ import re
 import urllib
 import warnings
 
+from requests import HTTPError
+
 from constants import DATE_FORMAT, DEFAULT_REQUESTS_HEADER
 import regex
 
@@ -52,3 +54,13 @@ def get_requests_header():
     else:
         warnings.warn('No Court Listener API authorization token found.', RuntimeWarning)
     return header
+
+
+def get_response_json(response):
+    try:
+        response.raise_for_status()  # HTTPError
+        return response.json()  # ValueError
+    except HTTPError:
+        raise NotImplementedError  # TODO
+    except ValueError:
+        raise NotImplementedError  # TODO

@@ -5,7 +5,7 @@ import click as cli
 import requests
 
 from .constants import DOCKET_LIST_ENDPOINT, DOCKET_LIST_FILTERS, OPINION_CLUSTER_ENDPOINT, OPINION_CLUSTER_FILTERS
-from .utils import filters_to_url_params, get_requests_header
+from .utils import filters_to_url_params, get_requests_header, get_response_json
 
 
 class CaseFiling(object):
@@ -38,16 +38,7 @@ class CaseFiling(object):
 
         filtered_endpoint = OPINION_CLUSTER_ENDPOINT + filters_to_url_params(OPINION_CLUSTER_FILTERS)
         response = CaseFiling._http_session.get(filtered_endpoint)
-
-        try:
-            response.raise_for_status()  # HTTPError
-            response_json = response.json()  # ValueError
-        except requests.HTTPError:
-            raise NotImplementedError  # TODO
-        except ValueError:
-            raise NotImplementedError  # TODO
-
-        return response_json
+        return get_response_json(response)
 
     def __str__(self):
         return self.docket_number
@@ -59,13 +50,7 @@ def get_active_docket(http_session, filters=DOCKET_LIST_FILTERS):
     active_docket = []
 
     while True:
-        try:
-            response.raise_for_status()  # HTTPError
-            response_json = response.json()  # ValueError
-        except requests.HTTPError:
-            raise NotImplementedError  # TODO
-        except ValueError:
-            raise NotImplementedError  # TODO
+        response_json = get_response_json(response)
 
         for docket_entry in response_json['results']:
             new_case_filing = CaseFiling(docket_entry)
