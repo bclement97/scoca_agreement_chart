@@ -69,7 +69,7 @@ def main():
     CaseFiling.set_http_session(http_session)
 
     active_docket = get_active_docket(http_session)
-    print(repr(active_docket[0]))
+    print(active_docket)
 
     http_session.close()
 
