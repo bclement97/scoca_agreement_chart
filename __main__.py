@@ -6,8 +6,9 @@ from cachecontrol.caches.file_cache import FileCache
 import click as cli
 import requests
 
+from .cache import SCOCAHeuristic
 from .constants import DOCKET_LIST_ENDPOINT, DOCKET_LIST_FILTERS, OPINION_CLUSTER_FILTERS, COURTLISTENER_BASE_URL
-from .utils import filters_to_url_params, get_requests_header, get_response_json, SCOCAHeuristic
+from .http import filters_to_url_params, get_requests_header, get_response_json
 
 
 class CaseFiling(object):
