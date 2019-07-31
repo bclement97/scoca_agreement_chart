@@ -1,13 +1,32 @@
-import datetime
+from __future__ import print_function
+from calendar import timegm
+from datetime import datetime, time, timedelta
+from email.utils import formatdate, parsedate
 import os
 import re
+from time import gmtime, localtime, mktime
 import urllib
 import warnings
 
+from cachecontrol.heuristics import BaseHeuristic
 from requests import HTTPError
 
 from constants import DATE_FORMAT, DEFAULT_REQUESTS_HEADER
 import regex
+
+
+class SCOCAHeuristic(BaseHeuristic):
+    def update_headers(self, response):
+        date = parsedate(response.headers['date'])
+        expires_local = next_posting_date(datetime(*date[:6]))
+        expires_utc = local_to_utc(expires_local)
+        return {
+            'expires': formatdate(timegm(expires_utc.timetuple())),
+            'cache-control': 'public',
+        }
+
+    def warning(self, response):
+        return '110 - "automatically cached, response is stale"'
 
 
 def filters_to_url_params(filter_dict, begin='?'):
@@ -67,7 +86,7 @@ def get_response_json(response):
         raise NotImplementedError  # TODO
 
 
-def next_posting_date(ref_date=datetime.datetime.now()):
+def next_posting_date(ref_date=datetime.now()):
     """Returns the next posting date for published SCOCA opinions (Monday/Thursday, 10am) after REF_DATE.
     """
     MON, TUE, WED, THU, FRI, SAT, SUN = range(7)
@@ -76,14 +95,14 @@ def next_posting_date(ref_date=datetime.datetime.now()):
         """Returns the date of the next occurrence of DAY (monday=0 ... sunday=6) or the current date if DAY is today.
         """
         days_delta = (day - ref_date.weekday()) % 7
-        dt_next_day = ref_date + datetime.timedelta(days=days_delta)
+        dt_next_day = ref_date + timedelta(days=days_delta)
         return dt_next_day.date()
 
     def date_at_10am(date):
         """Returns DATE at 10am.
         """
-        time_10am = datetime.time(10)
-        return datetime.datetime.combine(date, time_10am)
+        time_10am = time(10)
+        return datetime.combine(date, time_10am)
 
     next_monday_10am = date_at_10am(next_day(MON))
     next_thursday_10am = date_at_10am(next_day(THU))
@@ -91,7 +110,7 @@ def next_posting_date(ref_date=datetime.datetime.now()):
     timedelta_monday_10am = next_monday_10am - ref_date
     timedelta_thursday_10am = next_thursday_10am - ref_date
 
-    no_timedelta = datetime.timedelta()
+    no_timedelta = timedelta()
 
     # If one datetime is at or before now, select the other datetime
     if timedelta_monday_10am <= no_timedelta:
@@ -103,3 +122,9 @@ def next_posting_date(ref_date=datetime.datetime.now()):
         return next_monday_10am
     else:
         return next_thursday_10am
+
+
+def local_to_utc(dt):
+    t = localtime()
+    seconds_delta = timegm(t) - timegm(gmtime(mktime(t)))
+    return dt - timedelta(seconds=seconds_delta)
