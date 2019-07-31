@@ -1,11 +1,13 @@
 from __future__ import print_function
+import os
 
-import cachecontrol
+from cachecontrol import CacheControl
+from cachecontrol.caches.file_cache import FileCache
 import click as cli
 import requests
 
 from .constants import DOCKET_LIST_ENDPOINT, DOCKET_LIST_FILTERS, OPINION_CLUSTER_FILTERS, COURTLISTENER_BASE_URL
-from .utils import filters_to_url_params, get_requests_header, get_response_json
+from .utils import filters_to_url_params, get_requests_header, get_response_json, SCOCAHeuristic
 
 
 class CaseFiling(object):
@@ -64,7 +66,9 @@ def get_active_docket(http_session, filters=DOCKET_LIST_FILTERS):
 
 
 def main():
-    http_session = requests.Session()
+    dir_path = os.path.dirname(os.path.realpath(__file__))
+    cache_path = os.path.join(dir_path, '.cache')
+    http_session = CacheControl(requests.Session(), heuristic=SCOCAHeuristic(), cache=FileCache(cache_path))
     http_session.headers = get_requests_header()
     CaseFiling.set_http_session(http_session)
 
