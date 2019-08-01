@@ -39,3 +39,6 @@ class CaseFiling(object):
 
     def __str__(self):
         return self.docket_number
+
+    def __repr__(self):
+        return '<CaseFiling: {}>'.format(self)
