@@ -18,21 +18,22 @@ class CaseFiling(object):
 
     @property
     def url(self):
-        return COURTLISTENER_BASE_URL + self._opinion_cluster['absolute_url']
+        abs_url = self._opinion_cluster.get('absolute_url')
+        return COURTLISTENER_BASE_URL + abs_url if abs_url else None
 
     @property
     def published_on(self):
-        return self._opinion_cluster['date_filed']
+        return self._opinion_cluster.get('date_filed')
 
     @staticmethod
     def set_http_session(http_session):
         CaseFiling._http_session = http_session
 
     def __get_opinion_cluster(self):
-        if len(self._docket_entry['clusters']) != 1:
+        clusters = self._docket_entry.get('clusters')
+        if not isinstance(clusters, list) or len(clusters) != 1:
             raise ValueError  # TODO (custom unexpected value error?)
-
-        filtered_endpoint = self._docket_entry['clusters'][0] + filters_to_url_params(OPINION_CLUSTER_FILTERS)
+        filtered_endpoint = clusters[0] + filters_to_url_params(OPINION_CLUSTER_FILTERS)
         response = CaseFiling._http_session.get(filtered_endpoint)
         return get_response_json(response)
 
