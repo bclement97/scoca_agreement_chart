@@ -4,6 +4,11 @@ from .constants import COURTLISTENER_BASE_URL, OPINION_CLUSTER_FILTERS, OPINION_
 from .http import filters_to_url_params, get_response_json
 
 
+def _assert_unit_list(obj):
+    if not isinstance(obj, list) or len(obj) != 1:
+        raise ValueError  # TODO (custom unexpected value error?)
+
+
 class CaseFiling(object):
     # Default to no HTTP Session
     _http_session = requests
@@ -30,21 +35,21 @@ class CaseFiling(object):
     def set_http_session(http_session):
         CaseFiling._http_session = http_session
 
-    def __get_opinion_cluster(self):
-        clusters = self._docket_entry.get('clusters')
-        if not isinstance(clusters, list) or len(clusters) != 1:
-            raise ValueError  # TODO (custom unexpected value error?)
-        filtered_endpoint = clusters[0] + filters_to_url_params(OPINION_CLUSTER_FILTERS)
+    @staticmethod
+    def __get(endpoint, filter_dict):
+        filtered_endpoint = endpoint + filters_to_url_params(filter_dict)
         response = CaseFiling._http_session.get(filtered_endpoint)
         return get_response_json(response)
 
+    def __get_opinion_cluster(self):
+        clusters = self._docket_entry.get('clusters')
+        _assert_unit_list(clusters)
+        return CaseFiling.__get(clusters[0], OPINION_CLUSTER_FILTERS)
+
     def __get_opinion(self):
         opinions = self._opinion_cluster.get('sub_opinions')
-        if not isinstance(opinions, list) or len(opinions) != 1:
-            raise ValueError  # TODO (custom unexpected value error?)
-        filtered_endpoint = opinions[0] + filters_to_url_params(OPINION_INSTANCE_FILTERS)
-        response = CaseFiling._http_session.get(filtered_endpoint)
-        return get_response_json(response)
+        _assert_unit_list(opinions)
+        return CaseFiling.__get(opinions[0], OPINION_INSTANCE_FILTERS)
 
     def __str__(self):
         return self.docket_number
