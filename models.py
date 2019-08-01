@@ -28,6 +28,14 @@ class CaseFiling(object):
         return COURTLISTENER_BASE_URL + abs_url if abs_url else None
 
     @property
+    def plain_text(self):
+        return self._opinion.get('plain_text')
+
+    @property
+    def plain_text_hash(self):
+        return self._opinion.get('sha1')
+
+    @property
     def published_on(self):
         return self._opinion_cluster.get('date_filed')
 
