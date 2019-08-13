@@ -23,7 +23,7 @@ def get_active_docket(http_session, filters=DOCKET_LIST_FILTERS):
         response_json = get_response_json(response)
 
         for docket_entry in response_json['results']:
-            new_case_filing = CaseFiling(docket_entry)
+            new_case_filing = CaseFiling(docket_entry, http_session)
             active_docket.append(new_case_filing)
 
         if response_json['next'] is None:
@@ -38,7 +38,6 @@ def main():
     cache_path = os.path.join(dir_path, '.cache')
     http_session = CacheControl(requests.Session(), heuristic=SCOCAHeuristic(), cache=FileCache(cache_path))
     http_session.headers = get_requests_header()
-    CaseFiling.set_http_session(http_session)
 
     active_docket = get_active_docket(http_session)
     print(active_docket)

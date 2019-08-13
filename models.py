@@ -12,11 +12,9 @@ def _assert_unit_list(obj):
 
 
 class CaseFiling(object):
-    # Default to no HTTP Session
-    _http_session = requests
-
-    def __init__(self, docket_entry):
+    def __init__(self, docket_entry, http_session=requests):
         self._docket_entry = docket_entry
+        self._http_session = http_session
         self._opinion_cluster = self.__get_opinion_cluster()
         self._opinion = self.__get_opinion()
 
@@ -41,25 +39,20 @@ class CaseFiling(object):
     def published_on(self):
         return self._opinion_cluster.get('date_filed')
 
-    @staticmethod
-    def set_http_session(http_session):
-        CaseFiling._http_session = http_session
-
-    @staticmethod
-    def __get(endpoint, filter_dict):
+    def __get(self, endpoint, filter_dict):
         filtered_endpoint = endpoint + filters_to_url_params(filter_dict)
-        response = CaseFiling._http_session.get(filtered_endpoint)
+        response = self._http_session.get(filtered_endpoint)
         return get_response_json(response)
 
     def __get_opinion_cluster(self):
         clusters = self._docket_entry.get('clusters')
         _assert_unit_list(clusters)
-        return CaseFiling.__get(clusters[0], OPINION_CLUSTER_FILTERS)
+        return self.__get(clusters[0], OPINION_CLUSTER_FILTERS)
 
     def __get_opinion(self):
         opinions = self._opinion_cluster.get('sub_opinions')
         _assert_unit_list(opinions)
-        return CaseFiling.__get(opinions[0], OPINION_INSTANCE_FILTERS)
+        return self.__get(opinions[0], OPINION_INSTANCE_FILTERS)
 
     def __str__(self):
         return self.docket_number
