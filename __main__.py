@@ -7,8 +7,10 @@ import click as cli
 import requests
 
 from .cache import SCOCAHeuristic
-from .constants import DOCKET_LIST_ENDPOINT, DOCKET_LIST_FILTERS
-from .http import filters_to_url_params, get_requests_header, get_response_json
+from .http import (
+    DOCKET_LIST_ENDPOINT, DOCKET_LIST_FILTERS,
+    filters_to_url_params, get_requests_header, get_response_json
+)
 from .models import CaseFiling
 
 

@@ -2,9 +2,9 @@ from calendar import timegm
 from datetime import datetime, time, timedelta
 from time import gmtime, localtime, mktime
 
-from .constants import DATE_FORMAT
 
-
+DEFAULT_START_DATE = '2019-01-03'  # This is the start of the newest Assoc. Justice's tenure (J. Groban).
+DATE_FORMAT = '%Y-%m-%d'
 MON, TUE, WED, THU, FRI, SAT, SUN = range(7)
 
 

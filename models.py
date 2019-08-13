@@ -1,7 +1,9 @@
 import requests
 
-from .constants import COURTLISTENER_BASE_URL, OPINION_CLUSTER_FILTERS, OPINION_INSTANCE_FILTERS
-from .http import filters_to_url_params, get_response_json
+from .http import (
+    COURTLISTENER_BASE_URL, OPINION_CLUSTER_FILTERS, OPINION_INSTANCE_FILTERS,
+    filters_to_url_params, get_response_json
+)
 
 
 def _assert_unit_list(obj):
