@@ -34,7 +34,7 @@ class CaseFiling(object):
         return self._opinion.get('plain_text')
 
     @property
-    def plain_text_hash(self):
+    def sha1(self):
         return self._opinion.get('sha1')
 
     @property

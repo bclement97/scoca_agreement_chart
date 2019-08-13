@@ -15,7 +15,7 @@ CREATE TABLE case_filings (
     url             VARCHAR(255)                    NOT NULL,
     plain_text      CLOB                            NOT NULL,
 -- TODO: Use to check for updates?
-    plain_text_hash VARCHAR(255)                    NOT NULL,
+    sha1            VARCHAR(255)                    NOT NULL,
 -- When the filing was officially filed.
     filed_on        DATE                            NOT NULL,
 -- When the filing was added locally.
