@@ -77,10 +77,10 @@ def main():
     try:
         # Start the DB connection
         db_path = os.path.join(dir_path, 'scoca.db')
-        conn = sqlite3.connect(db_path)
-        if not conn:
-            msg = 'Could not connect to database: {}'.format(db_path)
+        if not os.path.isfile(db_path):
+            msg = 'Database does not exist: {}'.format(db_path)
             raise RuntimeError(msg)
+        conn = sqlite3.connect(db_path)
 
         try:
             active_docket = get_active_docket(http_session)
