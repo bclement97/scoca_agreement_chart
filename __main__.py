@@ -1,6 +1,7 @@
 from __future__ import print_function
 import os
 import sqlite3
+import string
 
 from cachecontrol import CacheControl
 from cachecontrol.caches.file_cache import FileCache
@@ -41,20 +42,27 @@ def save_active_docket(db_connection, active_docket):
     :param active_docket: An iterable of CaseFilings
     :return: None
     """
+
+    sql = """
+        INSERT INTO case_filings (
+            docket_number,
+            url,
+            plain_text,
+            sha1,
+            filed_on
+        )
+        VALUES (?, ?, ?, ?, ?);
+    """
+
     for case_filing in active_docket:
         try:
             # Automatically commit on success
             with db_connection:
-                db_connection.execute(
-                    'INSERT INTO case_filings (docket_number, url, plain_text, sha1, filed_on) VALUES (?, ?, ?, ?, ?)',
-                    (
-                        case_filing.docket_number,
-                        case_filing.url,
-                        case_filing.plain_text,
-                        case_filing.sha1,
-                        case_filing.filed_on
-                    )
-                )
+                db_connection.execute(sql, (case_filing.docket_number,
+                                            case_filing.url,
+                                            case_filing.plain_text,
+                                            case_filing.sha1,
+                                            case_filing.filed_on))
         except sqlite3.IntegrityError:
             # Ignore case filings whose docket numbers already exist in the table
             pass
