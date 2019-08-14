@@ -49,11 +49,22 @@ def main():
         raise RuntimeError(msg)
 
     active_docket = get_active_docket(http_session)
-    conn.executemany(
-        'INSERT INTO case_filings (docket_number, url, plain_text, sha1, filed_on) VALUES (?, ?, ?, ?, ?)',
-        [(cf.docket_number, cf.url, cf.plain_text, cf.sha1, cf.filed_on) for cf in active_docket]
-    )
-    conn.commit()
+    for case_filing in active_docket:
+        # Ignores case filings whose docket numbers already exist in the table
+        try:
+            with conn:
+                conn.execute(
+                    'INSERT INTO case_filings (docket_number, url, plain_text, sha1, filed_on) VALUES (?, ?, ?, ?, ?)',
+                    (
+                        case_filing.docket_number,
+                        case_filing.url,
+                        case_filing.plain_text,
+                        case_filing.sha1,
+                        case_filing.filed_on
+                    )
+                )
+        except sqlite3.IntegrityError:
+            pass
 
     conn.close()
     http_session.close()
