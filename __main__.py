@@ -1,5 +1,5 @@
 from __future__ import print_function
-import os
+import os.path
 import sqlite3
 import string
 
@@ -69,24 +69,25 @@ def save_active_docket(db_connection, active_docket):
 def main():
     dir_path = os.path.dirname(os.path.realpath(__file__))
 
-    # Start the cached HTTP session
+    # Start the cached HTTP Session
     cache_path = os.path.join(dir_path, '.cache')
     http_session = CacheControl(requests.Session(), heuristic=SCOCAHeuristic(), cache=FileCache(cache_path))
     http_session.headers = get_requests_header()
 
     try:
-        # Start the DB connection
+        # Start the DB Connection
         db_path = os.path.join(dir_path, '.db')
         if not os.path.isfile(db_path):
             msg = 'Database does not exist: {}'.format(db_path)
             raise RuntimeError(msg)
-        conn = sqlite3.connect(db_path)
+        db_conn = sqlite3.connect(db_path)
 
         try:
+            # Start main logic requiring the HTTP Session and DB Connection
             active_docket = get_active_docket(http_session)
-            save_active_docket(conn, active_docket)
+            save_active_docket(db_conn, active_docket)
         finally:
-            conn.close()
+            db_conn.close()
     finally:
         http_session.close()
 
