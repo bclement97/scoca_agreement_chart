@@ -1,5 +1,6 @@
 from __future__ import print_function
 import os
+import sqlite3
 
 from cachecontrol import CacheControl
 from cachecontrol.caches.file_cache import FileCache
@@ -35,13 +36,26 @@ def get_active_docket(http_session, filters=DOCKET_LIST_FILTERS):
 
 def main():
     dir_path = os.path.dirname(os.path.realpath(__file__))
+
     cache_path = os.path.join(dir_path, '.cache')
     http_session = CacheControl(requests.Session(), heuristic=SCOCAHeuristic(), cache=FileCache(cache_path))
     http_session.headers = get_requests_header()
 
-    active_docket = get_active_docket(http_session)
-    print(active_docket)
+    db_path = os.path.join(dir_path, 'scoca.db')
+    conn = sqlite3.connect(db_path)
+    if not conn:
+        msg = 'Could not connect to database: {}'.format(db_path)
+        http_session.close()
+        raise RuntimeError(msg)
 
+    active_docket = get_active_docket(http_session)
+    conn.executemany(
+        'INSERT INTO case_filings (docket_number, url, plain_text, sha1, filed_on) VALUES (?, ?, ?, ?, ?)',
+        [(cf.docket_number, cf.url, cf.plain_text, cf.sha1, cf.filed_on) for cf in active_docket]
+    )
+    conn.commit()
+
+    conn.close()
     http_session.close()
 
 
