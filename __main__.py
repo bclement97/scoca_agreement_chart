@@ -23,11 +23,9 @@ def get_active_docket(http_session, filters=DOCKET_LIST_FILTERS):
 
     while True:
         response_json = get_response_json(response)
-
         for docket_entry in response_json['results']:
             new_case_filing = CaseFiling(docket_entry, http_session)
             active_docket.append(new_case_filing)
-
         if response_json['next'] is None:
             break
         response = http_session.get(response_json['next'])
@@ -71,22 +69,26 @@ def save_active_docket(db_connection, active_docket):
 def main():
     dir_path = os.path.dirname(os.path.realpath(__file__))
 
+    # Start the cached HTTP session
     cache_path = os.path.join(dir_path, '.cache')
     http_session = CacheControl(requests.Session(), heuristic=SCOCAHeuristic(), cache=FileCache(cache_path))
     http_session.headers = get_requests_header()
 
-    db_path = os.path.join(dir_path, 'scoca.db')
-    conn = sqlite3.connect(db_path)
-    if not conn:
-        msg = 'Could not connect to database: {}'.format(db_path)
+    try:
+        # Start the DB connection
+        db_path = os.path.join(dir_path, 'scoca.db')
+        conn = sqlite3.connect(db_path)
+        if not conn:
+            msg = 'Could not connect to database: {}'.format(db_path)
+            raise RuntimeError(msg)
+
+        try:
+            active_docket = get_active_docket(http_session)
+            save_active_docket(conn, active_docket)
+        finally:
+            conn.close()
+    finally:
         http_session.close()
-        raise RuntimeError(msg)
-
-    active_docket = get_active_docket(http_session)
-    save_active_docket(conn, active_docket)
-
-    conn.close()
-    http_session.close()
 
 
 main()
