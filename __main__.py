@@ -34,6 +34,32 @@ def get_active_docket(http_session, filters=DOCKET_LIST_FILTERS):
     return active_docket
 
 
+def save_active_docket(db_connection, active_docket):
+    """Inserts CaseFilings from ACTIVE_DOCKET into DB_CONNECTION.
+
+    :param db_connection: The database connection
+    :param active_docket: An iterable of CaseFilings
+    :return: None
+    """
+    for case_filing in active_docket:
+        try:
+            # Automatically commit on success
+            with db_connection:
+                db_connection.execute(
+                    'INSERT INTO case_filings (docket_number, url, plain_text, sha1, filed_on) VALUES (?, ?, ?, ?, ?)',
+                    (
+                        case_filing.docket_number,
+                        case_filing.url,
+                        case_filing.plain_text,
+                        case_filing.sha1,
+                        case_filing.filed_on
+                    )
+                )
+        except sqlite3.IntegrityError:
+            # Ignore case filings whose docket numbers already exist in the table
+            pass
+
+
 def main():
     dir_path = os.path.dirname(os.path.realpath(__file__))
 
@@ -49,22 +75,7 @@ def main():
         raise RuntimeError(msg)
 
     active_docket = get_active_docket(http_session)
-    for case_filing in active_docket:
-        # Ignores case filings whose docket numbers already exist in the table
-        try:
-            with conn:
-                conn.execute(
-                    'INSERT INTO case_filings (docket_number, url, plain_text, sha1, filed_on) VALUES (?, ?, ?, ?, ?)',
-                    (
-                        case_filing.docket_number,
-                        case_filing.url,
-                        case_filing.plain_text,
-                        case_filing.sha1,
-                        case_filing.filed_on
-                    )
-                )
-        except sqlite3.IntegrityError:
-            pass
+    save_active_docket(conn, active_docket)
 
     conn.close()
     http_session.close()
