@@ -76,7 +76,7 @@ def main():
 
     try:
         # Start the DB connection
-        db_path = os.path.join(dir_path, 'scoca.db')
+        db_path = os.path.join(dir_path, '.db')
         if not os.path.isfile(db_path):
             msg = 'Database does not exist: {}'.format(db_path)
             raise RuntimeError(msg)
