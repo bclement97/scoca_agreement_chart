@@ -36,7 +36,7 @@ class CaseFiling(object):
         return self._opinion.get('sha1')
 
     @property
-    def published_on(self):
+    def filed_on(self):
         return self._opinion_cluster.get('date_filed')
 
     def __get(self, endpoint, filter_dict):
