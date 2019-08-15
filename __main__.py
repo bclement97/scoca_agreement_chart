@@ -34,11 +34,11 @@ def get_active_docket(http_session, filters=DOCKET_LIST_FILTERS):
 
 
 def save_active_docket(db_connection, active_docket):
-    """Inserts CaseFilings from ACTIVE_DOCKET into DB_CONNECTION.
+    """Inserts CaseFilings from ACTIVE_DOCKET into DB_CONNECTION, ignoring ones that already exist in the table.
 
     :param db_connection: The database connection
     :param active_docket: An iterable of CaseFilings
-    :return: None
+    :return: First return value is a list of inserted CaseFilings. Second return value is a list of ignored CaseFilings.
     """
 
     sql = """
@@ -52,6 +52,7 @@ def save_active_docket(db_connection, active_docket):
         VALUES (?, ?, ?, ?, ?);
     """
 
+    inserted, ignored = [], []
     for case_filing in active_docket:
         try:
             # Automatically commit on success
@@ -63,13 +64,18 @@ def save_active_docket(db_connection, active_docket):
                                             case_filing.filed_on))
         except sqlite3.IntegrityError:
             # Ignore case filings whose docket numbers already exist in the table
-            pass
+            ignored.append(case_filing)
+        else:
+            inserted.append(case_filing)
+
+    return inserted, ignored
 
 
 def main():
     dir_path = os.path.dirname(os.path.realpath(__file__))
 
     # Start the cached HTTP Session
+    # Cache directory will be created if it doesn't exist
     cache_path = os.path.join(dir_path, '.cache')
     http_session = CacheControl(requests.Session(), heuristic=SCOCAHeuristic(), cache=FileCache(cache_path))
     http_session.headers = get_requests_header()
@@ -85,7 +91,7 @@ def main():
         try:
             # Start main logic requiring the HTTP Session and DB Connection
             active_docket = get_active_docket(http_session)
-            save_active_docket(db_conn, active_docket)
+            saved_case_filings, _ = save_active_docket(db_conn, active_docket)
         finally:
             db_conn.close()
     finally:
