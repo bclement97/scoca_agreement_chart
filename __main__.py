@@ -1,6 +1,7 @@
 from __future__ import print_function
 import os.path
 import sqlite3
+import string
 
 from cachecontrol import CacheControl
 from cachecontrol.caches.file_cache import FileCache
@@ -92,11 +93,15 @@ def main():
             raise RuntimeError(msg)
         db_conn = sqlite3.connect(db_path)
         try:
-            flagged_case_filings = set()
-
             # Start main logic requiring the HTTP Session and DB
             # Connection.
             active_docket = get_active_docket(http_session)
+            # CaseFilings whose docket numbers end in a letter. Only 'A'
+            # and 'M' are known to occur, but others should be flagged
+            # regardless.
+            flagged_case_filings = set([cf for cf in active_docket
+                                        if cf.docket_number[-1]
+                                        in string.ascii_letters])
             saved_case_filings, _ = save_active_docket(db_conn, active_docket)
             for case_filing in active_docket:
                 opinion_tuples = regex.findall_opinions(case_filing.plain_text)
@@ -107,9 +112,8 @@ def main():
                 secondary_tuples = opinion_tuples[1:]
                 majority_opinion = MajorityOpinion(case_filing,
                                                    *majority_tuple[:3])
-                print(majority_opinion)
-                secondary_opinions = [Opinion(case_filing, *t[3:])
-                                      for t in secondary_tuples]
+                secondary_opinions = [Opinion(case_filing, *tup[3:])
+                                      for tup in secondary_tuples]
         finally:
             db_conn.close()
     finally:
