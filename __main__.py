@@ -18,21 +18,16 @@ import regex
 
 
 def get_active_docket(http_session, filters=DOCKET_LIST_FILTERS):
-    filtered_endpoint = (DOCKET_LIST_ENDPOINT
-                         + filters_to_url_params(filters))
-    response = http_session.get(filtered_endpoint)
     active_docket = []
-
+    next_page = DOCKET_LIST_ENDPOINT + filters_to_url_params(filters)
     while True:
-        response_json = get_response_json(response)
-        for docket_entry in response_json['results']:
+        response = get_response_json(http_session.get(next_page))
+        for docket_entry in response['results']:
             new_case_filing = CaseFiling(docket_entry, http_session)
             active_docket += [new_case_filing]
-        if response_json['next'] is None:
-            break
-        response = http_session.get(response_json['next'])
-
-    return active_docket
+        next_page = response.get('next')
+        if not next_page:
+            return active_docket
 
 
 def save_active_docket(db_connection, active_docket):
