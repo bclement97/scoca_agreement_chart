@@ -48,11 +48,11 @@ CREATE TABLE opinion_types (
     type    VARCHAR(255)    UNIQUE          NOT NULL
 );
 
--- TODO: Move to Python module setup/init?
-INSERT INTO opinion_types VALUES (0, 'Majority');
-INSERT INTO opinion_types VALUES (1, 'Concurring');
-INSERT INTO opinion_types VALUES (2, 'Dissenting');
-INSERT INTO opinion_types VALUES (3, 'Concurring and Dissenting');
+-- TODO: Move to Python module setup/init? --> Use OpinionType Enum
+INSERT INTO opinion_types VALUES (1, 'majority');
+INSERT INTO opinion_types VALUES (2, 'concurring');
+INSERT INTO opinion_types VALUES (3, 'dissenting');
+INSERT INTO opinion_types VALUES (4, 'concurring and dissenting');
 
 ----- OPINIONS -----
 
