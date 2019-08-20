@@ -71,6 +71,18 @@ def save_active_docket(db_connection, active_docket):
     return inserted, ignored
 
 
+def get_opinions(case_filing):
+    opinion_tuples = regex.findall_opinions(case_filing.plain_text)
+    if not len(opinion_tuples):
+        return []
+    majority_tuple, secondary_tuples = opinion_tuples[0], opinion_tuples[1:]
+    majority_opinion = MajorityOpinion(case_filing, *majority_tuple[:3])
+    secondary_opinions = [Opinion(case_filing, *tup[3:])
+                          for tup in secondary_tuples]
+    # return secondary_opinions + [majority_opinion]
+    return [majority_opinion] + secondary_opinions
+
+
 def main():
     dir_path = os.path.dirname(os.path.realpath(__file__))
 
@@ -99,16 +111,10 @@ def main():
                                         in string.ascii_letters])
             saved_case_filings, _ = save_active_docket(db_conn, active_docket)
             for case_filing in active_docket:
-                opinion_tuples = regex.findall_opinions(case_filing.plain_text)
-                if not len(opinion_tuples):
+                opinions = get_opinions(case_filing)
+                if not len(opinions):
                     flagged_case_filings.add(case_filing)
                     continue
-                majority_tuple = opinion_tuples[0]
-                secondary_tuples = opinion_tuples[1:]
-                majority_opinion = MajorityOpinion(case_filing,
-                                                   *majority_tuple[:3])
-                secondary_opinions = [Opinion(case_filing, *tup[3:])
-                                      for tup in secondary_tuples]
         finally:
             db_conn.close()
     finally:
