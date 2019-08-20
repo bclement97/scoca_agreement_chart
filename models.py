@@ -116,10 +116,10 @@ class Opinion(object):
         )
 
     def __repr__(self):
-        return '<Opinion [{}]: {} ({})>'.format(
+        return '<{} Opinion [{}]: {}>'.format(
+            str(self.type).upper(),
             self.case_filing.docket_number,
-            self.utf8_authoring_justice,
-            str(self.type).upper()
+            self.utf8_authoring_justice
         )
 
 
