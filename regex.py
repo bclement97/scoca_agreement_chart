@@ -42,8 +42,25 @@ OPINION = r'(?:' + OPINION_MAJORITY + ')|(?:' + OPINION_SECONDARY + ')'
 
 DOCKET_NUM = r'\bS\d+\b'
 
+_compiled_opinion = re.compile(OPINION, flags=re.IGNORECASE | re.UNICODE)
+
 
 def normalize_whitespace(text):
     """Converts literal newlines ('\' followed by 'n') and whitespace (including Unicode) to a single space character.
     """
     return re.sub(r'(?:\\n|\s)+', ' ', text, flags=re.UNICODE)
+
+
+def findall_opinions(plain_text, normalize=True):
+    text = normalize_whitespace(plain_text) if normalize else plain_text
+    return _compiled_opinion.findall(text)
+
+
+def split_justices(justices):
+    last_justice = None
+    try:
+        other_justices, last_justice = justices.rsplit(' and ', 1)
+    except ValueError:
+        other_justices = justices
+    retval = other_justices.rstrip(',').split(', ')
+    return retval + [last_justice] if last_justice else retval
