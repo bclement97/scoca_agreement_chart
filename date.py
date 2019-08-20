@@ -3,7 +3,8 @@ from datetime import datetime, time, timedelta
 from time import gmtime, localtime, mktime
 
 
-DEFAULT_START_DATE = '2019-01-03'  # This is the start of the newest Assoc. Justice's tenure (J. Groban).
+# This is the start of the newest Assoc. Justice's tenure (J. Groban).
+DEFAULT_START_DATE = '2019-01-03'
 DATE_FORMAT = '%Y-%m-%d'
 MON, TUE, WED, THU, FRI, SAT, SUN = range(7)
 
@@ -19,17 +20,18 @@ def local_to_utc(dt):
 
 
 def next_posting_date(ref_date=datetime.now()):
-    """Returns the next posting date for published SCOCA opinions (Monday/Thursday, 10am) after REF_DATE.
+    """Returns the next posting date for published SCOCA opinions
+    (Monday/Thursday, 10am) after REF_DATE.
     """
 
     def date_at_10am(date):
-        """Returns DATE at 10am.
-        """
+        """Returns DATE at 10am."""
         time_10am = time(10)
         return datetime.combine(date, time_10am)
 
     def next_day(day):
-        """Returns the date of the next occurrence of DAY (monday=0 ... sunday=6) or the current date if DAY is today.
+        """Returns the date of the next occurrence of DAY (monday=0 ...
+        sunday=6) or the current date if DAY is today.
         """
         days_delta = (day - ref_date.weekday()) % 7
         dt_next_day = ref_date + timedelta(days=days_delta)

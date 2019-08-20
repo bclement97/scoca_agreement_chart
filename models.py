@@ -84,12 +84,19 @@ class OpinionType(Enum):
 
 
 class Opinion(object):
-    def __init__(self, case_filing, authoring_justice, _type, concurring_chief, concurring_assocs):
+    def __init__(self, case_filing, authoring_justice, type_, concurring_chief,
+                 concurring_assocs):
         self.case_filing = case_filing
         self.authoring_justice = authoring_justice
-        self.type = _type if isinstance(_type, OpinionType) else OpinionType.to_type(_type)
-        self.concurring_justices = [concurring_chief] if concurring_chief else []
-        self.concurring_justices += regex.split_justices(concurring_assocs)
+        # Put concurring justices (chief and assoc.) into a list
+        self.concurring_justices = regex.split_justices(concurring_assocs)
+        if concurring_chief:
+            self.concurring_justices += [concurring_chief]
+        # Get the OpinionType enum value
+        if isinstance(type_, OpinionType):
+            self.type = type_
+        else:
+            self.type = OpinionType.to_type(type_)
 
     @property
     def utf8_authoring_justice(self):
@@ -97,18 +104,29 @@ class Opinion(object):
 
     @property
     def utf8_concurring_justices(self):
-        return [justice.encode('utf-8') for justice in self.concurring_justices]
+        return [justice.encode('utf-8')
+                for justice in self.concurring_justices]
 
     def __str__(self):
-        return '[{}] {} ({}): {}'.format(self.case_filing.docket_number, self.utf8_authoring_justice,
-                                         str(self.type).upper(), ', '.join(self.utf8_concurring_justices))
+        return '[{}] {} ({}): {}'.format(
+            self.case_filing.docket_number,
+            self.utf8_authoring_justice,
+            str(self.type).upper(),
+            ', '.join(self.utf8_concurring_justices)
+        )
 
     def __repr__(self):
-        return '<Opinion [{}]: {} ({})>'.format(self.case_filing.docket_number, self.utf8_authoring_justice,
-                                                str(self.type).upper())
+        return '<Opinion [{}]: {} ({})>'.format(
+            self.case_filing.docket_number,
+            self.utf8_authoring_justice,
+            str(self.type).upper()
+        )
 
 
 class MajorityOpinion(Opinion):
-    def __init__(self, case_filing, authoring_justice, concurring_chief, concurring_assocs):
-        super(MajorityOpinion, self).__init__(case_filing, authoring_justice, OpinionType.MAJORITY, concurring_chief,
+    def __init__(self, case_filing, authoring_justice, concurring_chief,
+                 concurring_assocs):
+        super(MajorityOpinion, self).__init__(case_filing, authoring_justice,
+                                              OpinionType.MAJORITY,
+                                              concurring_chief,
                                               concurring_assocs)
