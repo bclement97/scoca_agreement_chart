@@ -13,7 +13,7 @@ from .http import (
     DOCKET_LIST_ENDPOINT, DOCKET_LIST_FILTERS,
     filters_to_url_params, get_requests_header, get_response_json
 )
-from .models import CaseFiling, MajorityOpinion, Opinion
+from .models import CaseFiling, Justice, MajorityOpinion, Opinion
 import regex
 
 
@@ -83,6 +83,70 @@ def get_opinions(case_filing):
     return [majority_opinion] + secondary_opinions
 
 
+def save_opinions(db_connection, opinions):
+    insert_opinion_sql = """
+        INSERT INTO opinions (
+            case_filing_docket_number,
+            opinion_type_id,
+            authoring_justice_id
+        )
+        VALUES (?, ?, ?);
+    """
+    opinion_id_sql = """
+        SELECT id FROM opinions
+        WHERE case_filing_docket_number = ?
+            AND opinion_type_id = ?
+            AND authoring_justice_id = ?
+    """
+    concurrence_sql = """
+        INSERT INTO concurrences (
+            opinion_id,
+            justice_id
+        )
+        VALUES (?, ?)
+    """
+
+    # FIXME: This logic looks digusting. Does it even work?
+
+    inserted, ignored, partial = [], [], []
+    for opinion in opinions:
+        try:
+            justices = Justice.get_all_by_name(db_connection)
+            authoring_justice_id = justices[opinion.authoring_justice].id
+            # Automatically commit on success.
+            with db_connection:
+                db_connection.execute(insert_opinion_sql, (
+                    opinion.case_filing.docket_number,
+                    opinion.type.value,
+                    authoring_justice_id
+                ))
+            # Get the ID of the inserted opinion.
+            cur = db_connection.execute(opinion_id_sql, (
+                opinion.case_filing.docket_number,
+                opinion.type.value,
+                authoring_justice_id
+            ))
+            (opinion_id,) = cur.fetchone()
+            # Insert a concurrence row for each concurring justice.
+            for concurring_justice in opinion.concurring_justices:
+                try:
+                    concurring_justice_id = justices[concurring_justice].id
+                    with db_connection:
+                        db_connection.execute(concurrence_sql, (
+                            opinion_id,
+                            concurring_justice_id
+                        ))
+                except sqlite3.IntegrityError:
+                    partial += [opinion]
+        except sqlite3.IntegrityError:
+            ignored += [opinion]
+        else:
+            if opinion not in partial:
+                inserted += [opinion]
+
+    return inserted, ignored, partial
+
+
 def main():
     dir_path = os.path.dirname(os.path.realpath(__file__))
 
@@ -109,12 +173,13 @@ def main():
             flagged_case_filings = set([cf for cf in active_docket
                                         if cf.docket_number[-1]
                                         in string.ascii_letters])
-            saved_case_filings, _ = save_active_docket(db_conn, active_docket)
+            _, _ = save_active_docket(db_conn, active_docket)
             for case_filing in active_docket:
                 opinions = get_opinions(case_filing)
                 if not len(opinions):
                     flagged_case_filings.add(case_filing)
                     continue
+                _, _, _ = save_opinions(db_conn, opinions)
         finally:
             db_conn.close()
     finally:
