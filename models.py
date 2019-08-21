@@ -14,6 +14,23 @@ def _assert_unit_list(obj):
         raise ValueError  # TODO (custom unexpected value error?)
 
 
+class Justice(object):
+    def __init__(self, id_, name, shorthand):
+        self.id = id_
+        self.name = name
+        self.shorthand = shorthand
+
+    @staticmethod
+    def get_all(db_connection):
+        sql = "SELECT id, name, shorthand FROM justices"
+        return [Justice(*row) for row in db_connection.execute(sql)]
+
+    @staticmethod
+    def get_all_by_name(db_connection):
+        justices = Justice.get_all(db_connection)
+        return {j.name: j for j in justices}
+
+
 class CaseFiling(object):
     def __init__(self, docket_entry, http_session=requests):
         self._docket_entry = docket_entry
