@@ -31,7 +31,7 @@ def init_db(db_conn):
     justices_path = absolute_path('config', 'justices.csv')
     justices_sql = """
         INSERT INTO justices (
-            full_name,
+            fullname,
             short_name,
             shorthand
         )
@@ -155,7 +155,7 @@ def save_opinions(db_connection, opinions):
     inserted, ignored, partial = [], [], []
     for opinion in opinions:
         try:
-            justices = Justice.get_all_by_name(db_connection)
+            justices = Justice.get_all_by_short_name(db_connection)
             authoring_justice_id = justices[opinion.authoring_justice].id
             # Automatically commit on success.
             with db_connection:

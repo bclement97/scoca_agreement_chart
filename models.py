@@ -15,20 +15,21 @@ def _assert_unit_list(obj):
 
 
 class Justice(object):
-    def __init__(self, id_, name, shorthand):
+    def __init__(self, id_, fullname, short_name, shorthand):
         self.id = id_
-        self.name = name
+        self.fullname = fullname
+        self.short_name = short_name
         self.shorthand = shorthand
 
     @staticmethod
     def get_all(db_connection):
-        sql = "SELECT id, name, shorthand FROM justices"
+        sql = "SELECT id, fullname, short_name, shorthand FROM justices"
         return [Justice(*row) for row in db_connection.execute(sql)]
 
     @staticmethod
-    def get_all_by_name(db_connection):
+    def get_all_by_short_name(db_connection):
         justices = Justice.get_all(db_connection)
-        return {j.name: j for j in justices}
+        return {j.short_name: j for j in justices}
 
 
 class CaseFiling(object):
