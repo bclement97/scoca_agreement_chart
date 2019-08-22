@@ -15,7 +15,7 @@ from .http import (
     DOCKET_LIST_ENDPOINT, DOCKET_LIST_FILTERS,
     filters_to_url_params, get_requests_header, get_response_json
 )
-from .models import CaseFiling, Justice, MajorityOpinion, Opinion
+from .models import CaseFiling, Justice, MajorityOpinion, Opinion, OpinionType
 import regex
 
 
@@ -37,6 +37,7 @@ def init_db(db_conn):
         )
         VALUES (?, ?, ?) 
     """
+    opinion_types_sql = 'INSERT INTO opinion_types (type) VALUES (?)'
     # Initialize the database.
     try:
         with db_conn, open(init_sql_path) as init_sql_file:
@@ -59,7 +60,14 @@ def init_db(db_conn):
     except Exception:
         print('Could not populate justices table', file=sys.stderr)
         raise
-    # TODO: insert OpinionType enum values
+    # Populate the opinion_types table.
+    try:
+        with db_conn:
+            for opinion_type in list(OpinionType):
+                db_conn.execute(opinion_types_sql, (str(opinion_type),))
+    except Exception:
+        print('Could not populate opinion_types table', file=sys.stderr)
+        raise
 
 
 def get_active_docket(http_session, filters=DOCKET_LIST_FILTERS):
@@ -222,7 +230,7 @@ def main():
                 if not len(opinions):
                     flagged_case_filings.add(case_filing)
                     continue
-                _, _, _ = save_opinions(db_conn, opinions)
+                # _, _, _ = save_opinions(db_conn, opinions)
         finally:
             db_conn.close()
     finally:
