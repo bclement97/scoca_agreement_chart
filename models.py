@@ -126,18 +126,18 @@ class Opinion(object):
                 for justice in self.concurring_justices]
 
     def __str__(self):
-        return '[{}] {} ({}): {}'.format(
-            self.case_filing.docket_number,
-            self.utf8_authoring_justice,
-            str(self.type).upper(),
-            ', '.join(self.utf8_concurring_justices)
-        )
-
-    def __repr__(self):
-        return '<{} Opinion [{}]: {}>'.format(
+        return '{} Opinion [{}] by {}'.format(
             str(self.type).upper(),
             self.case_filing.docket_number,
             self.utf8_authoring_justice
+        )
+
+    def __repr__(self):
+        return '<{} Opinion [{}]: {} ({})>'.format(
+            str(self.type).upper(),
+            self.case_filing.docket_number,
+            self.utf8_authoring_justice,
+            ', '.join(self.utf8_concurring_justices)
         )
 
 
