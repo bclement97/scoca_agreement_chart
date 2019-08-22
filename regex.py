@@ -69,6 +69,8 @@ def findall_opinions(plain_text, normalize=True):
 
 
 def split_justices(justices):
+    if not justices:
+        return []
     last_justice = None
     try:
         other_justices, last_justice = justices.rsplit(' and ', 1)
