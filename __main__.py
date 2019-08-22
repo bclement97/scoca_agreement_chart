@@ -1,7 +1,9 @@
 from __future__ import print_function
+import csv
 import os.path
 import sqlite3
 import string
+import sys
 
 from cachecontrol import CacheControl
 from cachecontrol.caches.file_cache import FileCache
@@ -15,6 +17,49 @@ from .http import (
 )
 from .models import CaseFiling, Justice, MajorityOpinion, Opinion
 import regex
+
+
+_parent_dir = os.path.dirname(os.path.realpath(__file__))
+
+
+def absolute_path(*rel_paths):
+    return os.path.join(_parent_dir, *rel_paths)
+
+
+def init_db(db_conn):
+    init_sql_path = absolute_path('init.sql')
+    justices_path = absolute_path('config', 'justices.csv')
+    justices_sql = """
+        INSERT INTO justices (
+            full_name,
+            short_name,
+            shorthand
+        )
+        VALUES (?, ?, ?) 
+    """
+    # Initialize the database.
+    try:
+        with db_conn, open(init_sql_path) as init_sql_file:
+            init_sql = init_sql_file.read()
+            db_conn.executescript(init_sql)
+    except Exception:
+        print('Could not initialize database', file=sys.stderr)
+        raise
+    # Populate the justices table.
+    try:
+        with db_conn, open(justices_path) as justices_csv:
+            justices_reader = csv.DictReader(justices_csv)
+            for justice in justices_reader:
+                db_conn.execute(justices_sql, (
+                    # Sqlite3 requires unicode.
+                    justice['full_name'].decode('utf-8'),
+                    justice['short_name'].decode('utf-8'),
+                    justice['shorthand'].decode('utf-8')
+                ))
+    except Exception:
+        print('Could not populate justices table', file=sys.stderr)
+        raise
+    # TODO: insert OpinionType enum values
 
 
 def get_active_docket(http_session, filters=DOCKET_LIST_FILTERS):
@@ -79,7 +124,6 @@ def get_opinions(case_filing):
     majority_opinion = MajorityOpinion(case_filing, *majority_tuple[:3])
     secondary_opinions = [Opinion(case_filing, *tup[3:])
                           for tup in secondary_tuples]
-    # return secondary_opinions + [majority_opinion]
     return [majority_opinion] + secondary_opinions
 
 
@@ -148,22 +192,21 @@ def save_opinions(db_connection, opinions):
 
 
 def main():
-    dir_path = os.path.dirname(os.path.realpath(__file__))
-
     # Start the cached HTTP Session.
     # Cache directory will be created if it doesn't exist.
-    cache_path = os.path.join(dir_path, '.cache')
+    cache_path = os.path.join(_parent_dir, '.cache')
     http_session = CacheControl(requests.Session(), heuristic=SCOCAHeuristic(),
                                 cache=FileCache(cache_path))
     http_session.headers = get_requests_header()
     try:
         # Start the DB Connection.
-        db_path = os.path.join(dir_path, '.db')
-        if not os.path.isfile(db_path):
-            msg = 'Database does not exist: {}'.format(db_path)
-            raise RuntimeError(msg)
+        db_path = os.path.join(_parent_dir, '.db')
+        db_exists = os.path.isfile(db_path)
+        # Creates db file if doesn't exist.
         db_conn = sqlite3.connect(db_path)
         try:
+            if not db_exists:
+                init_db(db_conn)
             # Start main logic requiring the HTTP Session and DB
             # Connection.
             active_docket = get_active_docket(http_session)
@@ -186,4 +229,5 @@ def main():
         http_session.close()
 
 
-main()
+if __name__ == '__main__':
+    main()
