@@ -246,7 +246,11 @@ def main():
             _, _ = save_active_docket(db_conn, active_docket)
             for case_filing in active_docket:
                 opinions = get_opinions(case_filing)
-                if not len(opinions):
+                if (not len(opinions)
+                        or any(
+                            [op.type is OpinionType.CONCURRING_AND_DISSENTING
+                             for op in opinions]
+                        )):
                     flagged_case_filings.add(case_filing)
                     continue
                 _, _, _ = save_opinions(db_conn, opinions)
