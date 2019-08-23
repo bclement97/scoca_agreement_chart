@@ -4,6 +4,7 @@ import os.path
 import sqlite3
 import string
 import sys
+import warnings
 
 from cachecontrol import CacheControl
 from cachecontrol.caches.file_cache import FileCache
@@ -109,11 +110,13 @@ def save_active_docket(db_connection, active_docket):
         try:
             # Automatically commit on success.
             with db_connection:
-                db_connection.execute(sql, (case_filing.docket_number,
-                                            case_filing.url,
-                                            case_filing.plain_text,
-                                            case_filing.sha1,
-                                            case_filing.filed_on))
+                db_connection.execute(sql, (
+                    case_filing.docket_number,
+                    case_filing.url,
+                    case_filing.plain_text,
+                    case_filing.sha1,
+                    case_filing.filed_on
+                ))
         except sqlite3.IntegrityError:
             # Ignore case filings whose docket numbers already exist in
             # the table.
@@ -157,44 +160,60 @@ def save_opinions(db_connection, opinions):
         )
         VALUES (?, ?)
     """
+    justices = Justice.get_all_by_short_name(db_connection)
 
     # FIXME: This logic looks digusting. Does it even work?
 
     inserted, ignored, partial = [], [], []
     for opinion in opinions:
+        # Insert the opinion.
+        authoring_justice = justices.get(opinion.authoring_justice)
+        if authoring_justice is None:
+            msg = (
+                "Encountered unknown authoring justice '{}' in {}"
+                .format(
+                    opinion.authoring_justice.encode('utf-8'),
+                    repr(opinion)
+                )
+            )
+            warnings.warn(msg, RuntimeWarning)
+            continue
+        opinion_sql_tuple = (
+            opinion.case_filing.docket_number,
+            opinion.type.value,
+            authoring_justice.id
+        )
         try:
-            justices = Justice.get_all_by_short_name(db_connection)
-            authoring_justice_id = justices[opinion.authoring_justice].id
-            # Automatically commit on success.
             with db_connection:
-                db_connection.execute(insert_opinion_sql, (
-                    opinion.case_filing.docket_number,
-                    opinion.type.value,
-                    authoring_justice_id
-                ))
-            # Get the ID of the inserted opinion.
-            cur = db_connection.execute(opinion_id_sql, (
-                opinion.case_filing.docket_number,
-                opinion.type.value,
-                authoring_justice_id
-            ))
-            (opinion_id,) = cur.fetchone()
-            # Insert a concurrence row for each concurring justice.
-            for concurring_justice in opinion.concurring_justices:
-                try:
-                    concurring_justice_id = justices[concurring_justice].id
-                    with db_connection:
-                        db_connection.execute(concurrence_sql, (
-                            opinion_id,
-                            concurring_justice_id
-                        ))
-                except sqlite3.IntegrityError:
-                    partial += [opinion]
+                db_connection.execute(insert_opinion_sql, opinion_sql_tuple)
         except sqlite3.IntegrityError:
             ignored += [opinion]
         else:
-            if opinion not in partial:
-                inserted += [opinion]
+            inserted += [opinion]
+        # Get the ID of the inserted opinion.
+        cur = db_connection.execute(opinion_id_sql, opinion_sql_tuple)
+        (opinion_id,) = cur.fetchone()
+        # Insert a concurrence row for each concurring justice.
+        for concurring_justice_name in opinion.concurring_justices:
+            concurring_justice = justices.get(concurring_justice_name)
+            if concurring_justice is None:
+                msg = (
+                    "Encountered unknown concurring justice '{}' in {}"
+                    .format(
+                        concurring_justice_name.encode('utf-8'),
+                        repr(opinion)
+                    )
+                )
+                warnings.warn(msg, RuntimeWarning)
+                continue
+            try:
+                with db_connection:
+                    db_connection.execute(concurrence_sql, (
+                        opinion_id,
+                        concurring_justice.id
+                    ))
+            except sqlite3.IntegrityError:
+                partial += [opinion]
 
     return inserted, ignored, partial
 
@@ -230,7 +249,7 @@ def main():
                 if not len(opinions):
                     flagged_case_filings.add(case_filing)
                     continue
-                # _, _, _ = save_opinions(db_conn, opinions)
+                _, _, _ = save_opinions(db_conn, opinions)
         finally:
             db_conn.close()
     finally:
