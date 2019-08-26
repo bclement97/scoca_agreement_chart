@@ -240,16 +240,16 @@ def main():
             # CaseFilings whose docket numbers end in a letter. Only 'A'
             # and 'M' are known to occur, but others should be flagged
             # regardless.
-            flagged_case_filings = set([cf for cf in active_docket
-                                        if cf.docket_number[-1]
-                                        in string.ascii_letters])
+            flagged_case_filings = set(cf for cf in active_docket
+                                       if cf.docket_number[-1]
+                                       in string.ascii_letters)
             _, _ = save_active_docket(db_conn, active_docket)
             for case_filing in active_docket:
                 opinions = get_opinions(case_filing)
-                has_concur_dissent = any([
+                has_concur_dissent = any(
                     op.type is OpinionType.CONCURRING_AND_DISSENTING
                     for op in opinions
-                ])
+                )
                 if not len(opinions) or has_concur_dissent:
                     flagged_case_filings.add(case_filing)
                     continue
