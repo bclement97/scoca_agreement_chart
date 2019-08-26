@@ -54,7 +54,7 @@ def init_db(db_conn):
             for justice in justices_reader:
                 db_conn.execute(justices_sql, (
                     # Sqlite3 requires unicode.
-                    justice['full_name'].decode('utf-8'),
+                    justice['fullname'].decode('utf-8'),
                     justice['short_name'].decode('utf-8'),
                     justice['shorthand'].decode('utf-8')
                 ))
