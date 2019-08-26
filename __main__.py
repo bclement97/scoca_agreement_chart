@@ -23,13 +23,13 @@ import regex
 _parent_dir = os.path.dirname(os.path.realpath(__file__))
 
 
-def absolute_path(*rel_paths):
+def _absolute_path(*rel_paths):
     return os.path.join(_parent_dir, *rel_paths)
 
 
 def init_db(db_conn):
-    init_sql_path = absolute_path('init.sql')
-    justices_path = absolute_path('config', 'justices.csv')
+    init_sql_path = _absolute_path('init.sql')
+    justices_path = _absolute_path('config', 'justices.csv')
     justices_sql = """
         INSERT INTO justices (
             fullname,
