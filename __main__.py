@@ -27,6 +27,10 @@ def _absolute_path(*rel_paths):
     return os.path.join(_parent_dir, *rel_paths)
 
 
+def _print_err(*msg):
+    print('ERROR:', *msg, file=sys.stderr)
+
+
 def init_db(db_conn):
     init_sql_path = _absolute_path('init.sql')
     justices_path = _absolute_path('config', 'justices.csv')
@@ -45,7 +49,7 @@ def init_db(db_conn):
             init_sql = init_sql_file.read()
             db_conn.executescript(init_sql)
     except Exception:
-        print('Could not initialize database', file=sys.stderr)
+        _print_err('Could not initialize database')
         raise
     # Populate the justices table.
     try:
@@ -59,7 +63,7 @@ def init_db(db_conn):
                     justice['shorthand'].decode('utf-8')
                 ))
     except Exception:
-        print('Could not populate justices table', file=sys.stderr)
+        _print_err('Could not populate justices table')
         raise
     # Populate the opinion_types table.
     try:
@@ -67,7 +71,7 @@ def init_db(db_conn):
             for opinion_type in list(OpinionType):
                 db_conn.execute(opinion_types_sql, (str(opinion_type),))
     except Exception:
-        print('Could not populate opinion_types table', file=sys.stderr)
+        _print_err('Could not populate opinion_types table')
         raise
 
 
