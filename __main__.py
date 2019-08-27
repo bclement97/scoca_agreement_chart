@@ -12,6 +12,7 @@ from .http import (
 )
 from .models import CaseFiling, Justice, MajorityOpinion, Opinion, OpinionType
 import regex
+from .utils import warn
 
 
 def main():
@@ -150,7 +151,7 @@ def save_opinions(db_connection, opinions):
                     repr(opinion)
                 )
             )
-            warnings.warn(msg, RuntimeWarning)
+            warn(msg)
             continue
         opinion_sql_tuple = (
             opinion.case_filing.docket_number,
@@ -178,7 +179,7 @@ def save_opinions(db_connection, opinions):
                         repr(opinion)
                     )
                 )
-                warnings.warn(msg, RuntimeWarning)
+                warn(msg)
                 continue
             try:
                 with db_connection:

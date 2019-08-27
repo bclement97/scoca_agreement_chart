@@ -1,6 +1,7 @@
 from __future__ import print_function
 import os.path
 import sys
+import warnings
 
 
 _parent_dir = os.path.dirname(os.path.realpath(__file__))
@@ -12,3 +13,7 @@ def absolute_path(*rel_paths):
 
 def print_err(*msg):
     print('ERROR:', *msg, file=sys.stderr)
+
+
+def warn(msg):
+    warnings.warn(msg, RuntimeWarning, stacklevel=2)
