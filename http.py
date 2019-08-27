@@ -2,9 +2,13 @@ import os
 import urllib
 import warnings
 
-from requests import HTTPError
+from cachecontrol import CacheControl
+from cachecontrol.caches.file_cache import FileCache
+import requests
 
-from .date import DEFAULT_START_DATE
+import cache
+import date
+import utils
 
 
 COURTLISTENER_BASE_URL = 'https://www.courtlistener.com'
@@ -13,7 +17,7 @@ COURTLISTENER_REST_API = COURTLISTENER_BASE_URL + '/api/rest/v3'
 DOCKET_LIST_ENDPOINT = COURTLISTENER_REST_API + '/dockets/'
 DOCKET_LIST_FILTERS = {
     'court': 'cal',
-    'clusters__date_filed__gte': DEFAULT_START_DATE,
+    'clusters__date_filed__gte': date.DEFAULT_START_DATE,
     'order_by': ['-date_modified', '-date_created'],
 }
 OPINION_CLUSTER_ENDPOINT = COURTLISTENER_REST_API + '/clusters/{}/'  # {} is ID
@@ -82,7 +86,18 @@ def get_response_json(response):
     try:
         response.raise_for_status()  # HTTPError
         return response.json()  # ValueError
-    except HTTPError:
+    except requests.HTTPError:
         raise NotImplementedError  # TODO
     except ValueError:
         raise NotImplementedError  # TODO
+
+
+def start_http_session():
+    # Start the cached HTTP Session.
+    # Cache directory will be created if it doesn't exist.
+    cache_path = utils.absolute_path('.cache')
+    http_session = CacheControl(requests.Session(),
+                                heuristic=cache.SCOCAHeuristic(),
+                                cache=FileCache(cache_path))
+    http_session.headers = get_requests_header()
+    return http_session

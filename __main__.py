@@ -3,30 +3,46 @@ import sqlite3
 import string
 import warnings
 
-from cachecontrol import CacheControl
-from cachecontrol.caches.file_cache import FileCache
 import click as cli
-import requests
 
 from .db import start_db
-from .cache import SCOCAHeuristic
 from .http import (
     DOCKET_LIST_ENDPOINT, DOCKET_LIST_FILTERS,
-    filters_to_url_params, get_requests_header, get_response_json
+    filters_to_url_params, get_response_json, start_http_session
 )
 from .models import CaseFiling, Justice, MajorityOpinion, Opinion, OpinionType
 import regex
-from .utils import absolute_path
 
 
-def start_http_session():
-    # Start the cached HTTP Session.
-    # Cache directory will be created if it doesn't exist.
-    cache_path = absolute_path('.cache')
-    http_session = CacheControl(requests.Session(), heuristic=SCOCAHeuristic(),
-                                cache=FileCache(cache_path))
-    http_session.headers = get_requests_header()
-    return http_session
+def main():
+    http_session = start_http_session()
+    try:
+        db_conn = start_db()
+        try:
+            # Start main logic requiring the HTTP Session and DB
+            # Connection.
+            active_docket = get_active_docket(http_session)
+            # CaseFilings whose docket numbers end in a letter. Only 'A'
+            # and 'M' are known to occur, but others should be flagged
+            # regardless.
+            flagged_case_filings = set(cf for cf in active_docket
+                                       if cf.docket_number[-1]
+                                       in string.ascii_letters)
+            _, _ = save_active_docket(db_conn, active_docket)
+            for case_filing in active_docket:
+                opinions = get_opinions(case_filing)
+                has_concur_dissent = any(
+                    op.type is OpinionType.CONCURRING_AND_DISSENTING
+                    for op in opinions
+                )
+                if not len(opinions) or has_concur_dissent:
+                    flagged_case_filings.add(case_filing)
+                    continue
+                _, _, _ = save_opinions(db_conn, opinions)
+        finally:
+            db_conn.close()
+    finally:
+        http_session.close()
 
 
 def get_active_docket(http_session, filters=DOCKET_LIST_FILTERS):
@@ -174,37 +190,6 @@ def save_opinions(db_connection, opinions):
                 partial += [opinion]
 
     return inserted, ignored, partial
-
-
-def main():
-    http_session = start_http_session()
-    try:
-        db_conn = start_db()
-        try:
-            # Start main logic requiring the HTTP Session and DB
-            # Connection.
-            active_docket = get_active_docket(http_session)
-            # CaseFilings whose docket numbers end in a letter. Only 'A'
-            # and 'M' are known to occur, but others should be flagged
-            # regardless.
-            flagged_case_filings = set(cf for cf in active_docket
-                                       if cf.docket_number[-1]
-                                       in string.ascii_letters)
-            _, _ = save_active_docket(db_conn, active_docket)
-            for case_filing in active_docket:
-                opinions = get_opinions(case_filing)
-                has_concur_dissent = any(
-                    op.type is OpinionType.CONCURRING_AND_DISSENTING
-                    for op in opinions
-                )
-                if not len(opinions) or has_concur_dissent:
-                    flagged_case_filings.add(case_filing)
-                    continue
-                _, _, _ = save_opinions(db_conn, opinions)
-        finally:
-            db_conn.close()
-    finally:
-        http_session.close()
 
 
 if __name__ == '__main__':
