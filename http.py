@@ -95,7 +95,7 @@ def get_response_json(response):
 def start_http_session():
     # Start the cached HTTP Session.
     # Cache directory will be created if it doesn't exist.
-    cache_path = utils.absolute_path('.cache')
+    cache_path = utils.project_path('.cache')
     http_session = CacheControl(requests.Session(),
                                 heuristic=cache.SCOCAHeuristic(),
                                 cache=FileCache(cache_path))

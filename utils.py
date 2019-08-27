@@ -7,7 +7,7 @@ import warnings
 _parent_dir = os.path.dirname(os.path.realpath(__file__))
 
 
-def absolute_path(*rel_paths):
+def project_path(*rel_paths):
     return os.path.join(_parent_dir, *rel_paths)
 
 

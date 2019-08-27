@@ -3,12 +3,12 @@ import os.path
 import sqlite3
 
 from .models import OpinionType
-from .utils import absolute_path, print_err
+from .utils import project_path, print_err
 
 
 def start_db():
     # Start the DB Connection.
-    db_path = absolute_path('.db')
+    db_path = project_path('.db')
     db_exists = os.path.isfile(db_path)
     # Creates db file if doesn't exist.
     db_conn = sqlite3.connect(db_path)
@@ -21,7 +21,7 @@ def start_db():
 
 
 def init_db(db_conn):
-    init_sql_path = absolute_path('init.sql')
+    init_sql_path = project_path('init.sql')
     try:
         with db_conn, open(init_sql_path) as init_sql_file:
             init_sql = init_sql_file.read()
@@ -32,7 +32,7 @@ def init_db(db_conn):
 
 
 def populate_justices_table(db_conn):
-    justices_path = absolute_path('config', 'justices.csv')
+    justices_path = project_path('config', 'justices.csv')
     justices_sql = """
         INSERT INTO justices (
             fullname,
