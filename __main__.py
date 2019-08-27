@@ -18,23 +18,13 @@ from .http import (
 )
 from .models import CaseFiling, Justice, MajorityOpinion, Opinion, OpinionType
 import regex
-
-
-_parent_dir = os.path.dirname(os.path.realpath(__file__))
-
-
-def _absolute_path(*rel_paths):
-    return os.path.join(_parent_dir, *rel_paths)
-
-
-def _print_err(*msg):
-    print('ERROR:', *msg, file=sys.stderr)
+from .utils import absolute_path, print_err
 
 
 def start_http_session():
     # Start the cached HTTP Session.
     # Cache directory will be created if it doesn't exist.
-    cache_path = _absolute_path('.cache')
+    cache_path = absolute_path('.cache')
     http_session = CacheControl(requests.Session(), heuristic=SCOCAHeuristic(),
                                 cache=FileCache(cache_path))
     http_session.headers = get_requests_header()
@@ -43,7 +33,7 @@ def start_http_session():
 
 def start_db():
     # Start the DB Connection.
-    db_path = _absolute_path('.db')
+    db_path = absolute_path('.db')
     db_exists = os.path.isfile(db_path)
     # Creates db file if doesn't exist.
     db_conn = sqlite3.connect(db_path)
@@ -56,18 +46,18 @@ def start_db():
 
 
 def init_db(db_conn):
-    init_sql_path = _absolute_path('init.sql')
+    init_sql_path = absolute_path('init.sql')
     try:
         with db_conn, open(init_sql_path) as init_sql_file:
             init_sql = init_sql_file.read()
             db_conn.executescript(init_sql)
     except Exception:
-        _print_err('Could not initialize database')
+        print_err('Could not initialize database')
         raise
 
 
 def populate_justices_table(db_conn):
-    justices_path = _absolute_path('config', 'justices.csv')
+    justices_path = absolute_path('config', 'justices.csv')
     justices_sql = """
         INSERT INTO justices (
             fullname,
@@ -87,7 +77,7 @@ def populate_justices_table(db_conn):
                     justice['shorthand'].decode('utf-8')
                 ))
     except Exception:
-        _print_err('Could not populate table `justices`')
+        print_err('Could not populate table `justices`')
         raise
 
 
@@ -98,7 +88,7 @@ def populate_opinion_types_table(db_conn):
             for opinion_type in list(OpinionType):
                 db_conn.execute(opinion_types_sql, (str(opinion_type),))
     except Exception:
-        _print_err('Could not populate table `opinion_types`')
+        print_err('Could not populate table `opinion_types`')
         raise
 
 
