@@ -31,6 +31,28 @@ def _print_err(*msg):
     print('ERROR:', *msg, file=sys.stderr)
 
 
+def start_http_session():
+    # Start the cached HTTP Session.
+    # Cache directory will be created if it doesn't exist.
+    cache_path = _absolute_path('.cache')
+    http_session = CacheControl(requests.Session(), heuristic=SCOCAHeuristic(),
+                                cache=FileCache(cache_path))
+    http_session.headers = get_requests_header()
+    return http_session
+
+
+def start_db():
+    # Start the DB Connection.
+    db_path = _absolute_path('.db')
+    db_exists = os.path.isfile(db_path)
+    # Creates db file if doesn't exist.
+    db_conn = sqlite3.connect(db_path)
+    # Initialize the DB if needed.
+    if not db_exists:
+        init_db(db_conn)
+    return db_conn
+
+
 def init_db(db_conn):
     init_sql_path = _absolute_path('init.sql')
     justices_path = _absolute_path('config', 'justices.csv')
@@ -223,21 +245,10 @@ def save_opinions(db_connection, opinions):
 
 
 def main():
-    # Start the cached HTTP Session.
-    # Cache directory will be created if it doesn't exist.
-    cache_path = os.path.join(_parent_dir, '.cache')
-    http_session = CacheControl(requests.Session(), heuristic=SCOCAHeuristic(),
-                                cache=FileCache(cache_path))
-    http_session.headers = get_requests_header()
+    http_session = start_http_session()
     try:
-        # Start the DB Connection.
-        db_path = os.path.join(_parent_dir, '.db')
-        db_exists = os.path.isfile(db_path)
-        # Creates db file if doesn't exist.
-        db_conn = sqlite3.connect(db_path)
+        db_conn = start_db()
         try:
-            if not db_exists:
-                init_db(db_conn)
             # Start main logic requiring the HTTP Session and DB
             # Connection.
             active_docket = get_active_docket(http_session)
