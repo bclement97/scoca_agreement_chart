@@ -126,14 +126,14 @@ def save_opinions(db_connection, opinions):
         SELECT id FROM opinions
         WHERE case_filing_docket_number = ?
             AND opinion_type_id = ?
-            AND authoring_justice_id = ?
+            AND authoring_justice_id = ?;
     """
     concurrence_sql = """
         INSERT INTO concurrences (
             opinion_id,
             justice_id
         )
-        VALUES (?, ?)
+        VALUES (?, ?);
     """
     justices = Justice.get_all_by_short_name(db_connection)
 

@@ -39,7 +39,7 @@ def populate_justices_table(db_conn):
             short_name,
             shorthand
         )
-        VALUES (?, ?, ?) 
+        VALUES (?, ?, ?); 
     """
     try:
         with db_conn, open(justices_path) as justices_csv:
@@ -57,7 +57,7 @@ def populate_justices_table(db_conn):
 
 
 def populate_opinion_types_table(db_conn):
-    opinion_types_sql = 'INSERT INTO opinion_types (type) VALUES (?)'
+    opinion_types_sql = 'INSERT INTO opinion_types (type) VALUES (?);'
     try:
         with db_conn:
             for opinion_type in list(OpinionType):
