@@ -50,11 +50,23 @@ def start_db():
     # Initialize the DB if needed.
     if not db_exists:
         init_db(db_conn)
+        populate_justices_table(db_conn)
+        populate_opinion_types_table(db_conn)
     return db_conn
 
 
 def init_db(db_conn):
     init_sql_path = _absolute_path('init.sql')
+    try:
+        with db_conn, open(init_sql_path) as init_sql_file:
+            init_sql = init_sql_file.read()
+            db_conn.executescript(init_sql)
+    except Exception:
+        _print_err('Could not initialize database')
+        raise
+
+
+def populate_justices_table(db_conn):
     justices_path = _absolute_path('config', 'justices.csv')
     justices_sql = """
         INSERT INTO justices (
@@ -64,16 +76,6 @@ def init_db(db_conn):
         )
         VALUES (?, ?, ?) 
     """
-    opinion_types_sql = 'INSERT INTO opinion_types (type) VALUES (?)'
-    # Initialize the database.
-    try:
-        with db_conn, open(init_sql_path) as init_sql_file:
-            init_sql = init_sql_file.read()
-            db_conn.executescript(init_sql)
-    except Exception:
-        _print_err('Could not initialize database')
-        raise
-    # Populate the justices table.
     try:
         with db_conn, open(justices_path) as justices_csv:
             justices_reader = csv.DictReader(justices_csv)
@@ -85,15 +87,18 @@ def init_db(db_conn):
                     justice['shorthand'].decode('utf-8')
                 ))
     except Exception:
-        _print_err('Could not populate justices table')
+        _print_err('Could not populate table `justices`')
         raise
-    # Populate the opinion_types table.
+
+
+def populate_opinion_types_table(db_conn):
+    opinion_types_sql = 'INSERT INTO opinion_types (type) VALUES (?)'
     try:
         with db_conn:
             for opinion_type in list(OpinionType):
                 db_conn.execute(opinion_types_sql, (str(opinion_type),))
     except Exception:
-        _print_err('Could not populate opinion_types table')
+        _print_err('Could not populate table `opinion_types`')
         raise
 
 
