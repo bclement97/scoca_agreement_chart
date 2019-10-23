@@ -36,6 +36,10 @@ def main():
                                        in string.ascii_letters)
             _, _ = save_active_docket(db_conn, active_docket)
             for case_filing in active_docket:
+                # Ignore flagged case filings for now
+                if case_filing in flagged_case_filings:
+                    warn('Ignoring {}'.format(case_filing))
+                    continue
                 opinions = get_opinions(case_filing)
                 has_concur_dissent = any(
                     op.type is OpinionType.CONCURRING_AND_DISSENTING
@@ -177,14 +181,26 @@ def save_opinions(db_connection, opinions):
         for concurring_justice_name in opinion.concurring_justices:
             concurring_justice = justices.get(concurring_justice_name)
             if concurring_justice is None:
-                msg = (
-                    "Encountered unknown concurring justice '{}' in {}"
-                    .format(
-                        concurring_justice_name.encode('utf-8'),
-                        repr(opinion)
-                    )
+                # See if we missed justices due to bad formatting
+                # E.g., a missing comma between names
+                justice_names, unknown_name = regex.findall_and_reduce(
+                    justices.keys(),
+                    concurring_justice_name
                 )
-                warn(msg)
+                if justice_names:
+                    # Add the newly discovered concurring justices to
+                    # the opinion so that this loop will come back to them.
+                    opinion.concurring_justices.extend(justice_names)
+                if unknown_name:
+                    # Part or all of the unknown name remains
+                    msg = (
+                        "Encountered unknown concurring justice '{}' in {}"
+                        .format(
+                            concurring_justice_name.encode('utf-8'),
+                            repr(opinion)
+                        )
+                    )
+                    warn(msg)
                 continue
             try:
                 with db_connection:

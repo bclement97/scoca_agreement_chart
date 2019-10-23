@@ -51,9 +51,10 @@ OPINION_SECONDARY = (
 # Matches OPINION_REGEX_MAJORITY first and then OPINION_REGEX_SECONDARY.
 OPINION = r'(?:' + OPINION_MAJORITY + ')|(?:' + OPINION_SECONDARY + ')'
 
-DOCKET_NUM = r'\bS\d+\b'
+DOCKET_NUM = r'\bS\d+[A-Z]?\b'
 
-_compiled_opinion = re.compile(OPINION, flags=re.IGNORECASE | re.UNICODE)
+_flags = re.IGNORECASE | re.UNICODE
+_compiled_opinion = re.compile(OPINION, flags=_flags)
 
 
 def normalize_whitespace(text):
@@ -78,3 +79,14 @@ def split_justices(justices):
         other_justices = justices
     retval = other_justices.rstrip(',').split(', ')
     return retval + [last_justice] if last_justice else retval
+
+
+def findall_and_reduce(needles, haystack):
+    matches = []
+    for needle in needles:
+        haystack = haystack.strip()
+        match = re.search(needle, haystack, flags=_flags)
+        if match:
+            matches.append(match.group())
+            haystack = haystack[:match.start()] + haystack[match.end():]
+    return matches, haystack.strip()
