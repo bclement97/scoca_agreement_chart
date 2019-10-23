@@ -3,7 +3,7 @@ import yattag
 from .models import Justice
 
 
-def generate(chart, justices):
+def generate(chart, justices, indent=False):
     doc, tag, text, line = yattag.Doc().ttl()
 
     css = """
@@ -81,8 +81,6 @@ def generate(chart, justices):
                 line('td', j.shorthand)
                 line('td', j.fullname.encode('utf-8'))
 
-    return yattag.indent(
-        doc.getvalue(),
-        indentation='  ',
-        newline='\n'
-    )
+    return doc.getvalue() if not indent else yattag.indent(doc.getvalue(),
+                                                           indentation='  ',
+                                                           newline='\n')
