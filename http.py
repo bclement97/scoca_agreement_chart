@@ -86,10 +86,10 @@ def get_response_json(response):
     try:
         response.raise_for_status()  # HTTPError
         return response.json()  # ValueError
-    except requests.HTTPError:
-        raise NotImplementedError  # TODO
-    except ValueError:
-        raise NotImplementedError  # TODO
+    except requests.HTTPError as e:
+        raise NotImplementedError(e)  # TODO
+    except ValueError as e:
+        raise NotImplementedError(e)  # TODO
 
 
 def start_http_session():
