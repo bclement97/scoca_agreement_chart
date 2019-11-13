@@ -115,6 +115,11 @@ class Opinion(object):
             self.type = type_
         else:
             self.type = OpinionType.to_type(type_)
+        # Set (and if necessary, prompt) the effective type
+        self.effective_type = self.type
+        if self.type == OpinionType.CONCURRING_AND_DISSENTING:
+            self._prompt_effective_type()
+
 
     @property
     def utf8_authoring_justice(self):
@@ -139,6 +144,36 @@ class Opinion(object):
             self.utf8_authoring_justice,
             ', '.join(self.utf8_concurring_justices)
         )
+
+    def _prompt_effective_type(self):
+        if self.type != OpinionType.CONCURRING_AND_DISSENTING:
+            raise ValueError("Prompting effective type for non-Concurring and Dissenting opinion: " + repr(self))
+        concur_inputs = ['concurring', 'c', '[c]oncurring']
+        dissent_inputs = ['dissenting', 'd', '[d]issenting']
+        valid_inputs_str = '[c]oncurring / [d]issenting'
+        prompt = (
+            "\n"
+            "Case {} has a Concurring and Dissenting opinion that needs "
+            "to be classified as either Concurring OR Dissenting for "
+            "calculation. Please visit the URL below to review the opinion text:\n"
+            "\n"
+            "{}\n"
+            "\n"
+            "Effective Type of {}\n"
+            "({}): "
+        ).format(self.case_filing, self.case_filing.url, self, valid_inputs_str)
+        while True:
+            effective_type = raw_input(prompt).lower()
+            if effective_type in concur_inputs:
+                self.effective_type = OpinionType.CONCURRING
+                break
+            elif effective_type in dissent_inputs:
+                self.effective_type = OpinionType.DISSENTING
+                break
+            prompt = (
+                "Invalid input. Try one of the following: {}\n"
+                "Effective Type of {} ({}): "
+            ).format(', '.join(valid_inputs), self, valid_inputs_str)
 
 
 class MajorityOpinion(Opinion):

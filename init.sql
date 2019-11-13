@@ -55,6 +55,7 @@ CREATE TABLE opinions (
     id                          INTEGER         PRIMARY KEY                 AUTOINCREMENT,
     case_filing_docket_number   VARCHAR(255)                    NOT NULL,
     opinion_type_id             INTEGER                         NOT NULL,
+    effective_op_type           INTEGER                         NOT NULL,
     authoring_justice_id        INTEGER                         NOT NULL,
 
     CONSTRAINT UQ_Opinions
@@ -68,6 +69,10 @@ CREATE TABLE opinions (
         FOREIGN KEY (opinion_type_id)
         REFERENCES opinion_types (id),
 
+    CONSTRAINT FK_Opinions_OpinionTypes_effective
+        FOREIGN KEY (effective_op_type)
+        REFERENCES opinion_types (id),
+
     CONSTRAINT FK_Opinions_Justices
         FOREIGN KEY (authoring_justice_id)
         REFERENCES justices (id)
@@ -78,6 +83,9 @@ CREATE INDEX IDX_Opinions_CaseFilingDocketNum
 
 CREATE INDEX IDX_Opinions_OpinionTypeId
     ON opinions (opinion_type_id);
+
+CREATE INDEX IDX_Opinions_OpinionTypeId_effective
+    ON opinions (effective_op_type);
 
 CREATE INDEX IDX_Opinions_AuthoringJusticeId
     ON opinions (authoring_justice_id);

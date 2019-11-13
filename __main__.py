@@ -41,11 +41,7 @@ def main():
                     warn('Ignoring {}'.format(case_filing))
                     continue
                 opinions = get_opinions(case_filing)
-                has_concur_dissent = any(
-                    op.type is OpinionType.CONCURRING_AND_DISSENTING
-                    for op in opinions
-                )
-                if not len(opinions) or has_concur_dissent:
+                if not len(opinions):
                     flagged_case_filings.add(case_filing)
                     continue
                 _, _, _ = save_opinions(db_conn, opinions)
@@ -127,14 +123,16 @@ def save_opinions(db_connection, opinions):
         INSERT INTO opinions (
             case_filing_docket_number,
             opinion_type_id,
+            effective_op_type,
             authoring_justice_id
         )
-        VALUES (?, ?, ?);
+        VALUES (?, ?, ?, ?);
     """
     opinion_id_sql = """
         SELECT id FROM opinions
         WHERE case_filing_docket_number = ?
             AND opinion_type_id = ?
+            AND effective_op_type = ?
             AND authoring_justice_id = ?;
     """
     concurrence_sql = """
@@ -165,6 +163,7 @@ def save_opinions(db_connection, opinions):
         opinion_sql_tuple = (
             opinion.case_filing.docket_number,
             opinion.type.value,
+            opinion.effective_type.value,
             authoring_justice.id
         )
         try:
@@ -267,12 +266,12 @@ def build():
         SELECT
             case_filing_docket_number docket_num,
             o.id opinion_id,
-            opinion_type_id type_id,
+            effective_op_type type_id,
             type type_str, -- used for displaying
             authoring_justice_id author_id,
             c.justice_id
         FROM opinions o
-            JOIN opinion_types ot ON o.opinion_type_id = ot.id
+            JOIN opinion_types ot ON effective_op_type = ot.id
             LEFT JOIN concurrences c ON o.id = c.opinion_id
         ORDER BY docket_num, ot.id, author_id;
     """
@@ -287,9 +286,9 @@ def build():
         parent_op = None
 
         for op in db_conn.execute(opinion_sql):
+            (docket_num, op_id, type_id, type_str, author_id, justice_id) = op
             # When we encounter a new docket number, ensure that it's a
-            # majority opinion (by nature of the SQL ordering).
-            (docket_num, _, type_id, _, author_id, justice_id) = op
+            # majority opinion (by nature of the SQL ordering).-=
             if parent_op is None or parent_op['docket_num'] != docket_num:
                 assert type_id == OpinionType.MAJORITY.value
                 if parent_op is not None:
@@ -313,7 +312,10 @@ def build():
                     concurrence_add_concur(author_id, justice_id)
             else:
                 assert type_id == OpinionType.CONCURRING_AND_DISSENTING.value
-                # TODO
+                assert False, (
+                    "Effective type for Opinion ID#{} incorrectly set " +
+                    "to 'Concurring and Dissenting'"
+                ).format(op_id)
     finally:
         db_conn.close()
 
