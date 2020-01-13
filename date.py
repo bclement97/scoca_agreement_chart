@@ -13,6 +13,10 @@ def date_to_str(date):
     return date.strftime(DATE_FORMAT)
 
 
+def str_to_date(s, format=DATE_FORMAT):
+    return datetime.strptime(s, format)
+
+
 def local_to_utc(dt):
     t = localtime()
     seconds_delta = timegm(t) - timegm(gmtime(mktime(t)))
