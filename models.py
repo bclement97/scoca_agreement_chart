@@ -36,8 +36,11 @@ class CaseFiling(object):
     def __init__(self, docket_entry, http_session=requests):
         self._docket_entry = docket_entry
         self._http_session = http_session
-        self._opinion_cluster = self.__get_opinion_cluster()
-        self._opinion = self.__get_opinion()
+        self._opinion_cluster = None
+        self._opinion = None
+
+        self.fetch_opinion_cluster()
+        self.fetch_opinion()
 
     @property
     def docket_number(self):
@@ -65,15 +68,15 @@ class CaseFiling(object):
         response = self._http_session.get(filtered_endpoint)
         return get_response_json(response)
 
-    def __get_opinion_cluster(self):
+    def fetch_opinion_cluster(self):
         clusters = self._docket_entry.get('clusters')
         _assert_unit_list(clusters)
-        return self.__get(clusters[0], OPINION_CLUSTER_FILTERS)
+        self._opinion_cluster = self.__get(clusters[0], OPINION_CLUSTER_FILTERS)
 
-    def __get_opinion(self):
+    def fetch_opinion(self):
         opinions = self._opinion_cluster.get('sub_opinions')
         _assert_unit_list(opinions)
-        return self.__get(opinions[0], OPINION_INSTANCE_FILTERS)
+        self._opinion = self.__get(opinions[0], OPINION_INSTANCE_FILTERS)
 
     def __str__(self):
         return self.docket_number
