@@ -25,19 +25,15 @@ def main():
     try:
         db_conn = start_db()
         try:
-            # Start main logic requiring the HTTP Session and DB
-            # Connection.
-            active_docket = get_active_docket(http_session)
             # CaseFilings whose docket numbers end in a letter. Only 'A'
             # and 'M' are known to occur, but others should be flagged
             # regardless.
-            flagged_case_filings = set(cf for cf in active_docket
-                                       if cf.docket_number[-1]
-                                       in string.ascii_letters)
-            _, _ = save_active_docket(db_conn, active_docket)
-            for case_filing in active_docket:
-                # Ignore flagged case filings for now
-                if case_filing in flagged_case_filings:
+            flagged_case_filings = set()
+            for case_filing in get_active_docket(http_session):
+                # TODO: save case filings
+                if case_filing.docket_number[-1] in string.ascii_letters:
+                    flagged_case_filings.add(case_filing)
+                    # Ignore flagged case filings for now.
                     warn('Ignoring {}'.format(case_filing))
                     continue
                 opinions = get_opinions(case_filing)
@@ -45,6 +41,7 @@ def main():
                     flagged_case_filings.add(case_filing)
                     continue
                 _, _, _ = save_opinions(db_conn, opinions)
+            # _, _ = save_active_docket(db_conn, active_docket)
         finally:
             db_conn.close()
     finally:
@@ -52,16 +49,14 @@ def main():
 
 
 def get_active_docket(http_session, filters=DOCKET_LIST_FILTERS):
-    active_docket = []
     next_page = DOCKET_LIST_ENDPOINT + filters_to_url_params(filters)
     while True:
         response = get_response_json(http_session.get(next_page))
         for docket_entry in response['results']:
-            new_case_filing = CaseFiling(docket_entry, http_session)
-            active_docket += [new_case_filing]
+            yield CaseFiling(docket_entry, http_session)
         next_page = response.get('next')
         if not next_page:
-            return active_docket
+            return
 
 
 def save_active_docket(db_connection, active_docket):
