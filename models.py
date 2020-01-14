@@ -14,7 +14,12 @@ def _assert_unit_list(obj):
         raise ValueError  # TODO (custom unexpected value error?)
 
 
-class Justice(object):
+class _Insertable(object):
+    def insert(self, db_connection):
+        raise NotImplementedError
+
+
+class Justice(_Insertable):
     all = dict()
 
     def __init__(self, shorthand, short_name, fullname):
@@ -52,7 +57,7 @@ class Justice(object):
     #     return {j.short_name: j for j in justices}
 
 
-class CaseFiling(object):
+class CaseFiling(_Insertable):
     def __init__(self, docket_entry, http_session=requests):
         self._docket_entry = docket_entry
         self._http_session = http_session
@@ -143,7 +148,7 @@ class OpinionType(Enum):
         raise NotImplementedError
 
 
-class Opinion(object):
+class Opinion(_Insertable):
     def __init__(self, case_filing, authoring_justice, type_, concurring_chief,
                  concurring_assocs):
         self.case_filing = case_filing
