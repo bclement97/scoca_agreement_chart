@@ -1,8 +1,8 @@
-fullname,short_name,shorthand
-Tani Gorre Cantil-Sakauye,Cantil-Sakauye,TCS
-Ming W. Chin,Chin,MC
-Carol A. Corrigan,Corrigan,CC
-Goodwin H. Liu,Liu,GL
-Mariano-Florentino Cuéllar,Cuéllar,MFC
-Leondra R. Kruger,Kruger,LK
-Joshua P. Groban,Groban,JG
+shorthand,short_name,fullname
+TCS,Cantil-Sakauye,Tani Gorre Cantil-Sakauye
+MC,Chin,Ming W. Chin
+CC,Corrigan,Carol A. Corrigan
+GL,Liu,Goodwin H. Liu
+MFC,Cuéllar,Mariano-Florentino Cuéllar
+LK,Kruger,Leondra R. Kruger
+JG,Groban,Joshua P. Groban

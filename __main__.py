@@ -26,9 +26,9 @@ def init():
         justices_path = project_path('config', 'justices.csv')
         justices_sql = """
             INSERT INTO justices (
-                fullname,
+                shorthand,
                 short_name,
-                shorthand
+                fullname
             )
             VALUES (?, ?, ?); 
         """
@@ -38,9 +38,9 @@ def init():
                 for justice in justices_reader:
                     db_connection.execute(justices_sql, (
                         # Sqlite3 requires unicode.
-                        justice['fullname'].decode('utf-8'),
+                        justice['shorthand'].decode('utf-8'),
                         justice['short_name'].decode('utf-8'),
-                        justice['shorthand'].decode('utf-8')
+                        justice['fullname'].decode('utf-8')
                     ))
         except Exception:
             print_err('Could not populate table `justices`')
