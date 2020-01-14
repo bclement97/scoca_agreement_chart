@@ -7,6 +7,7 @@ from .http import (
     filters_to_url_params, get_response_json
 )
 import regex
+from .utils import warn
 
 
 def _assert_unit_list(obj):
@@ -171,7 +172,6 @@ class Opinion(_Insertable):
         if self.type == OpinionType.CONCURRING_AND_DISSENTING:
             self._prompt_effective_type()
 
-
     @property
     def utf8_authoring_justice(self):
         return self.authoring_justice.encode('utf-8')
@@ -180,6 +180,33 @@ class Opinion(_Insertable):
     def utf8_concurring_justices(self):
         return [justice.encode('utf-8')
                 for justice in self.concurring_justices]
+
+    def insert(self, db_connection):
+        sql = """
+            INSERT INTO opinions (
+                case_filing_docket_number,
+                opinion_type_id,
+                effective_op_type,
+                authoring_justice
+            )
+            VALUES (?, ?, ?, ?);
+        """
+        authoring_justice = Justice.get(self.authoring_justice)
+        if authoring_justice is None:
+            msg = (
+                "Encountered unknown authoring justice '{}' in {}".format(
+                    self.authoring_justice.encode('utf-8'),
+                    repr(self)
+                )
+            )
+            warn(msg)
+            return
+        db_connection.execute(sql, (
+            self.case_filing.docket_number,
+            self.type.value,
+            self.effective_type.value,
+            authoring_justice.shorthand
+        ))
 
     def __str__(self):
         return '{} Opinion [{}] by {}'.format(

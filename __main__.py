@@ -53,7 +53,7 @@ def main():
         # We'll defer commits until the end of each case filing so that
         # each case filing and its opinions are contained by the same
         # transaction.
-        db_conn = db.connect('DEFERRED')
+        db_connection = db.connect('DEFERRED')
         try:
             flagged_case_filings = set()
             for case_filing in get_active_docket(http_session):
@@ -65,16 +65,22 @@ def main():
                     # Ignore flagged case filings for now.
                     warn('Ignoring {}'.format(case_filing))
                     continue
-                case_filing.insert(db_conn)
+                case_filing.insert(db_connection)
                 for opinion in parse_opinions(case_filing):
                     # Case Filing has no opinions.
                     if opinion is None:
                         flagged_case_filings.add(case_filing)
                         break
-                    # TODO: save opinions
-                # _, _, _ = save_opinions(db_conn, opinions)
+                    opinion.insert(db_connection)
+                try:
+                    db_connection.commit()
+                except sqlite3.Error as e:
+                    print_err('Could not insert {} - {}'.format(
+                        case_filing.docket_number,
+                        e
+                    ))
         finally:
-            db_conn.close()
+            db_connection.close()
     finally:
         http_session.close()
 
