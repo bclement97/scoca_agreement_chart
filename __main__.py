@@ -20,6 +20,8 @@ from .utils import print_err, project_path, warn
 
 
 def init():
+    # Defer commits to ensure either all justices/opinion types are
+    # inserted or none at all.
     db_connection = db.connect("DEFERRED")
     try:
         # Load justices from CSV config file and populate the justice table.
