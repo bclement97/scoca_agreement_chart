@@ -10,7 +10,7 @@ import warnings
 # import click as cli
 
 import agreement_chart
-from .db import start_db
+import db
 from .http import (
     DOCKET_LIST_ENDPOINT, DOCKET_LIST_FILTERS,
     filters_to_url_params, get_response_json, start_http_session
@@ -26,7 +26,7 @@ def main():
         # We'll defer commits until the end of each case filing so that
         # each case filing and its opinions are contained by the same
         # transaction.
-        db_conn = start_db("DEFERRED")
+        db_conn = db.connect("DEFERRED")
         try:
             flagged_case_filings = set()
             for case_filing in get_active_docket(http_session):
@@ -274,7 +274,7 @@ def build():
         ORDER BY docket_num, ot.id, author_id;
     """
 
-    db_conn = start_db()
+    db_conn = db.connect()
     try:
         db_conn.row_factory = sqlite3.Row
 

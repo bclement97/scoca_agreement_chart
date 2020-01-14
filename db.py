@@ -6,29 +6,43 @@ from .models import OpinionType
 from .utils import project_path, print_err
 
 
-def start_db(isolation_level=None):
-    # Start the DB Connection.
-    db_path = project_path('.db')
-    db_exists = os.path.isfile(db_path)
-    # Creates db file if doesn't exist.
-    db_conn = sqlite3.connect(db_path, isolation_level=isolation_level)
-    # Initialize the DB if needed.
-    if not db_exists:
-        init_db(db_conn)
-        populate_justices_table(db_conn)
-        populate_opinion_types_table(db_conn)
-    return db_conn
+_DB_PATH = project_path('.db')
 
 
-def init_db(db_conn):
+def exists():
+    return os.path.isfile(_DB_PATH)
+
+
+def init():
     init_sql_path = project_path('init.sql')
+    db_connection = connect()
     try:
-        with db_conn, open(init_sql_path) as init_sql_file:
-            init_sql = init_sql_file.read()
-            db_conn.executescript(init_sql)
-    except Exception:
-        print_err('Could not initialize database')
-        raise
+        try:
+            with db_connection, open(init_sql_path) as init_sql_file:
+                init_sql = init_sql_file.read()
+                db_connection.executescript(init_sql)
+        except Exception:
+            print_err('Could not initialize database')
+            raise
+    finally:
+        db_connection.close()
+
+
+def connect(isolation_level=None):
+    return sqlite3.connect(_DB_PATH, isolation_level=isolation_level)
+
+
+# def start(isolation_level=None):
+#     # Start the DB Connection.
+#     db_exists = os.path.isfile(_db_path)
+#     # Creates db file if doesn't exist.
+#     db_conn = sqlite3.connect(_db_path, isolation_level=isolation_level)
+#     # Initialize the DB if needed.
+#     if not db_exists:
+#         init(db_conn)
+#         populate_justices_table(db_conn)
+#         populate_opinion_types_table(db_conn)
+#     return db_conn
 
 
 def populate_justices_table(db_conn):
@@ -65,3 +79,8 @@ def populate_opinion_types_table(db_conn):
     except Exception:
         print_err('Could not populate table `opinion_types`')
         raise
+
+
+# Initialize the database if it doesn't exist when this module is imported.
+if not exists():
+    init()
