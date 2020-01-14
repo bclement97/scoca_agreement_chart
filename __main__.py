@@ -22,7 +22,7 @@ from .utils import print_err, project_path, warn
 def init():
     # Defer commits to ensure either all justices/opinion types are
     # inserted or none at all.
-    db_connection = db.connect("DEFERRED")
+    db_connection = db.connect('DEFERRED')
     try:
         # Load justices from CSV config file and populate the justice table.
         justices_path = project_path('config', 'justices.csv')
@@ -53,7 +53,7 @@ def main():
         # We'll defer commits until the end of each case filing so that
         # each case filing and its opinions are contained by the same
         # transaction.
-        db_conn = db.connect("DEFERRED")
+        db_conn = db.connect('DEFERRED')
         try:
             flagged_case_filings = set()
             for case_filing in get_active_docket(http_session):
