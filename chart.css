@@ -1,0 +1,39 @@
+#agreeTable {
+  border: none;
+  border-collapse: collapse;
+}
+
+#agreeTable th, #agreeTable td {
+  width: 6em;
+  height: 3em;
+  text-align: center;
+  vertical-align: middle;
+}
+
+#agreeTable th {
+  border: none;
+  color: #222;
+}
+
+#agreeTable td {
+  border: solid 2px black;
+  padding: 0;
+}
+
+.low, .red {
+  background-color: #ff9d9d;
+}
+
+.high, .green {
+  background-color: #b1efb1;
+}
+
+#legendTable {
+  border: none;
+  border-collapse: collapse;
+}
+
+#legendTable td {
+  border: solid 1px #000;
+  padding: 0.25em 0.5em;
+}
