@@ -10,48 +10,6 @@ from .utils import project_path
 _CSS_PATH = project_path('chart.css')
 
 
-def generate(chart, justices, indent=False):
-    doc, tag, text, line = yattag.Doc().ttl()
-
-    with tag('style'), open(_CSS_PATH) as css:
-        doc.asis(css.read())
-
-    with tag('table', id='agreeTable'):
-        # Top labels
-        with tag('tr'):
-            line('th', '')
-            for j in justices[1:]:
-                line('th', j.shorthand)
-        # Left labels and chart body
-        for col, j_left in enumerate(justices):
-            with tag('tr'):
-                # Left space
-                if col > 0:
-                    line('th', '', colspan=col)
-                # Left label
-                line('th', j_left.shorthand)
-                # Chart body
-                for j_top in justices[col+1:]:
-                    key = frozenset([j_left.id, j_top.id])
-                    rate = int(round(chart[key]))
-                    with tag('td'):
-                        if rate > 90:
-                            doc.attr(klass='high')
-                        elif rate < 10:
-                            doc.attr(klass='low')
-                        text('{}%'.format(rate))
-
-    with tag('table', id='legendTable'):
-        for j in justices:
-            with tag('tr'):
-                line('td', j.shorthand)
-                line('td', j.fullname.encode('utf-8'))
-
-    return doc.getvalue() if not indent else yattag.indent(doc.getvalue(),
-                                                           indentation='  ',
-                                                           newline='\n')
-
-
 def build():
     def create_chart(justices):
         """Creates a chart between 7 justices.
@@ -161,6 +119,48 @@ def build():
     with open(filepath, 'w+') as f:
         f.write(generate(rate_chart, justices))
         print('Exported "{}"'.format(filepath))
+
+
+def generate(chart, justices, indent=False):
+    doc, tag, text, line = yattag.Doc().ttl()
+
+    with tag('style'), open(_CSS_PATH) as css:
+        doc.asis(css.read())
+
+    with tag('table', id='agreeTable'):
+        # Top labels
+        with tag('tr'):
+            line('th', '')
+            for j in justices[1:]:
+                line('th', j.shorthand)
+        # Left labels and chart body
+        for col, j_left in enumerate(justices):
+            with tag('tr'):
+                # Left space
+                if col > 0:
+                    line('th', '', colspan=col)
+                # Left label
+                line('th', j_left.shorthand)
+                # Chart body
+                for j_top in justices[col+1:]:
+                    key = frozenset([j_left.id, j_top.id])
+                    rate = int(round(chart[key]))
+                    with tag('td'):
+                        if rate > 90:
+                            doc.attr(klass='high')
+                        elif rate < 10:
+                            doc.attr(klass='low')
+                        text('{}%'.format(rate))
+
+    with tag('table', id='legendTable'):
+        for j in justices:
+            with tag('tr'):
+                line('td', j.shorthand)
+                line('td', j.fullname.encode('utf-8'))
+
+    return doc.getvalue() if not indent else yattag.indent(doc.getvalue(),
+                                                           indentation='  ',
+                                                           newline='\n')
 
 
 def print_chart(chart, justices):
