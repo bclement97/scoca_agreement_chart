@@ -23,7 +23,7 @@ from .utils import project_path, warn
 def main():
     http_session = start_http_session()
     try:
-        db_conn = start_db()
+        db_conn = start_db("DEFERRED")
         try:
             flagged_case_filings = set()
             for case_filing in get_active_docket(http_session):

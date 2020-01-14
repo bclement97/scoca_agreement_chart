@@ -6,12 +6,12 @@ from .models import OpinionType
 from .utils import project_path, print_err
 
 
-def start_db():
+def start_db(isolation_level=None):
     # Start the DB Connection.
     db_path = project_path('.db')
     db_exists = os.path.isfile(db_path)
     # Creates db file if doesn't exist.
-    db_conn = sqlite3.connect(db_path)
+    db_conn = sqlite3.connect(db_path, isolation_level=isolation_level)
     # Initialize the DB if needed.
     if not db_exists:
         init_db(db_conn)
