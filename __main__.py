@@ -52,13 +52,11 @@ def main():
 
 def get_active_docket(http_session, filters=DOCKET_LIST_FILTERS):
     next_page = DOCKET_LIST_ENDPOINT + filters_to_url_params(filters)
-    while True:
+    while next_page:
         response = get_response_json(http_session.get(next_page))
         for docket_entry in response['results']:
             yield CaseFiling(docket_entry, http_session)
         next_page = response.get('next')
-        if not next_page:
-            return
 
 
 def save_active_docket(db_connection, active_docket):
