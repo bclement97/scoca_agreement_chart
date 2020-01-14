@@ -25,22 +25,24 @@ def main():
     try:
         db_conn = start_db()
         try:
-            # CaseFilings whose docket numbers end in a letter. Only 'A'
-            # and 'M' are known to occur, but others should be flagged
-            # regardless.
             flagged_case_filings = set()
             for case_filing in get_active_docket(http_session):
-                # TODO: save case filings
+                # CaseFilings whose docket numbers end in a letter. Only 'A'
+                # and 'M' are known to occur, but others should be flagged
+                # regardless.
                 if case_filing.docket_number[-1] in string.ascii_letters:
                     flagged_case_filings.add(case_filing)
                     # Ignore flagged case filings for now.
                     warn('Ignoring {}'.format(case_filing))
                     continue
-                opinions = get_opinions(case_filing)
-                if not len(opinions):
-                    flagged_case_filings.add(case_filing)
-                    continue
-                _, _, _ = save_opinions(db_conn, opinions)
+                # TODO: save case filings
+                for opinion in get_opinions(case_filing):
+                    # Case Filing has no opinions.
+                    if opinion is None:
+                        flagged_case_filings.add(case_filing)
+                        break
+                    # TODO: save opinions
+                # _, _, _ = save_opinions(db_conn, opinions)
             # _, _ = save_active_docket(db_conn, active_docket)
         finally:
             db_conn.close()
@@ -105,12 +107,13 @@ def save_active_docket(db_connection, active_docket):
 def get_opinions(case_filing):
     opinion_tuples = regex.findall_opinions(case_filing.plain_text)
     if not len(opinion_tuples):
-        return []
+        # Case Filing has no opinions.
+        yield None
+        return
     majority_tuple, secondary_tuples = opinion_tuples[0], opinion_tuples[1:]
-    majority_opinion = MajorityOpinion(case_filing, *majority_tuple[:3])
-    secondary_opinions = [Opinion(case_filing, *tup[3:])
-                          for tup in secondary_tuples]
-    return [majority_opinion] + secondary_opinions
+    yield MajorityOpinion(case_filing, *majority_tuple[:3])
+    for tup in secondary_tuples:
+        yield Opinion(case_filing, *tup[3:])
 
 
 def save_opinions(db_connection, opinions):
