@@ -55,10 +55,10 @@ CREATE TABLE opinions (
     case_filing_docket_number   VARCHAR(255)                    NOT NULL,
     opinion_type_id             INTEGER                         NOT NULL,
     effective_op_type           INTEGER                         NOT NULL,
-    authoring_justice_id        INTEGER                         NOT NULL,
+    authoring_justice           INTEGER                         NOT NULL,
 
     CONSTRAINT UQ_Opinions
-        UNIQUE (case_filing_docket_number, opinion_type_id, authoring_justice_id),
+        UNIQUE (case_filing_docket_number, opinion_type_id, authoring_justice),
 
     CONSTRAINT FK_Opinions_CaseFilings
         FOREIGN KEY (case_filing_docket_number)
@@ -73,8 +73,8 @@ CREATE TABLE opinions (
         REFERENCES opinion_types (id),
 
     CONSTRAINT FK_Opinions_Justices
-        FOREIGN KEY (authoring_justice_id)
-        REFERENCES justices (id)
+        FOREIGN KEY (authoring_justice)
+        REFERENCES justices (shorthand)
 );
 
 CREATE INDEX IDX_Opinions_CaseFilingDocketNum
@@ -86,30 +86,30 @@ CREATE INDEX IDX_Opinions_OpinionTypeId
 CREATE INDEX IDX_Opinions_OpinionTypeId_effective
     ON opinions (effective_op_type);
 
-CREATE INDEX IDX_Opinions_AuthoringJusticeId
-    ON opinions (authoring_justice_id);
+CREATE INDEX IDX_Opinions_AuthoringJustice
+    ON opinions (authoring_justice);
 
 ----- CONCURRENCES -----
 
 CREATE TABLE concurrences (
     id          INTEGER     PRIMARY KEY                 AUTOINCREMENT,
     opinion_id  INTEGER                     NOT NULL,
-    justice_id  INTEGER                     NOT NULL,
+    justice     INTEGER                     NOT NULL,
 
     CONSTRAINT UQ_Concurrences
-        UNIQUE (opinion_id, justice_id),
+        UNIQUE (opinion_id, justice),
 
     CONSTRAINT FK_Concurrences_Opinions
         FOREIGN KEY (opinion_id)
         REFERENCES opinions (id),
 
     CONSTRAINT FK_Concurrences_Justices
-        FOREIGN KEY (justice_id)
-        REFERENCES justices (id)
+        FOREIGN KEY (justice)
+        REFERENCES justices (shorthand)
 );
 
 CREATE INDEX IDX_Concurrences_OpinionId
     ON concurrences (opinion_id);
 
-CREATE INDEX IDX_Concurrences_JusticeId
-    ON concurrences (justice_id);
+CREATE INDEX IDX_Concurrences_Justice
+    ON concurrences (justice);

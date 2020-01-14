@@ -149,7 +149,7 @@ def save_opinions(db_connection, opinions):
             case_filing_docket_number,
             opinion_type_id,
             effective_op_type,
-            authoring_justice_id
+            authoring_justice
         )
         VALUES (?, ?, ?, ?);
     """
@@ -158,12 +158,12 @@ def save_opinions(db_connection, opinions):
         WHERE case_filing_docket_number = ?
             AND opinion_type_id = ?
             AND effective_op_type = ?
-            AND authoring_justice_id = ?;
+            AND authoring_justice = ?;
     """
     concurrence_sql = """
         INSERT INTO concurrences (
             opinion_id,
-            justice_id
+            justice
         )
         VALUES (?, ?);
     """

@@ -101,12 +101,12 @@ def build():
             o.id opinion_id,
             effective_op_type type_id,
             type type_str, -- used for displaying
-            authoring_justice_id author_id,
-            c.justice_id
+            authoring_justice author,
+            c.justice
         FROM opinions o
             JOIN opinion_types ot ON effective_op_type = ot.id
             LEFT JOIN concurrences c ON o.id = c.opinion_id
-        ORDER BY docket_num, ot.id, author_id;
+        ORDER BY docket_num, ot.id, author;
     """
 
     db_conn = db.connect()
@@ -119,7 +119,7 @@ def build():
         parent_op = None
 
         for op in db_conn.execute(opinion_sql):
-            (docket_num, op_id, type_id, type_str, author_id, justice_id) = op
+            (docket_num, op_id, type_id, type_str, author, justice) = op
             # When we encounter a new docket number, ensure that it's a
             # majority opinion (by nature of the SQL ordering).-=
             if parent_op is None or parent_op['docket_num'] != docket_num:
@@ -131,18 +131,18 @@ def build():
                 parent_op = op
 
             if type_id == OpinionType.MAJORITY.value:
-                if justice_id:
-                    concurrence_add_concur(author_id, justice_id)
+                if justice:
+                    concurrence_add_concur(author, justice)
             elif type_id == OpinionType.CONCURRING.value:
-                concurrence_add_concur(parent_op['author_id'], author_id)
-                if justice_id:
-                    concurrence_add_concur(parent_op['author_id'], justice_id)
-                    concurrence_add_concur(author_id, justice_id)
+                concurrence_add_concur(parent_op['author'], author)
+                if justice:
+                    concurrence_add_concur(parent_op['author'], justice)
+                    concurrence_add_concur(author, justice)
             elif type_id == OpinionType.DISSENTING.value:
-                concurrence_add_dissent(parent_op['author_id'], author_id)
-                if justice_id:
-                    concurrence_add_dissent(parent_op['author_id'], justice_id)
-                    concurrence_add_concur(author_id, justice_id)
+                concurrence_add_dissent(parent_op['author'], author)
+                if justice:
+                    concurrence_add_dissent(parent_op['author'], justice)
+                    concurrence_add_concur(author, justice)
             else:
                 assert type_id == OpinionType.CONCURRING_AND_DISSENTING.value
                 assert False, (
