@@ -15,20 +15,41 @@ def _assert_unit_list(obj):
 
 
 class Justice(object):
+    all = dict()
+
     def __init__(self, shorthand, short_name, fullname):
         self.shorthand = shorthand
         self.short_name = short_name
         self.fullname = fullname
+        # Cache the justice by shorthand and short name for lookup.
+        Justice.all[shorthand] = self
+        Justice.all[short_name] = self
 
-    @staticmethod
-    def get_all(db_connection):
-        sql = "SELECT shorthand, short_name, fullname FROM justices"
-        return [Justice(*row) for row in db_connection.execute(sql)]
+    def insert(self, db_connection):
+        sql = """
+            INSERT INTO justices (
+                shorthand,
+                short_name,
+                fullname
+            )
+            VALUES (?, ?, ?); 
+        """
+        db_connection.execute(sql, (
+            # Sqlite3 requires unicode.
+            self.shorthand.decode('utf-8'),
+            self.short_name.decode('utf-8'),
+            self.fullname.decode('utf-8')
+        ))
 
-    @staticmethod
-    def get_all_by_short_name(db_connection):
-        justices = Justice.get_all(db_connection)
-        return {j.short_name: j for j in justices}
+    # @staticmethod
+    # def get_all(db_connection):
+    #     sql = "SELECT shorthand, short_name, fullname FROM justices"
+    #     return [Justice(*row) for row in db_connection.execute(sql)]
+    #
+    # @staticmethod
+    # def get_all_by_short_name(db_connection):
+    #     justices = Justice.get_all(db_connection)
+    #     return {j.short_name: j for j in justices}
 
 
 class CaseFiling(object):

@@ -20,28 +20,15 @@ from .utils import print_err, project_path, warn
 
 
 def init():
-    db_connection = db.connect()
+    db_connection = db.connect("DEFERRED")
     try:
         # Load justices from CSV config file and populate the justice table.
         justices_path = project_path('config', 'justices.csv')
-        justices_sql = """
-            INSERT INTO justices (
-                shorthand,
-                short_name,
-                fullname
-            )
-            VALUES (?, ?, ?); 
-        """
         try:
             with db_connection, open(justices_path) as justices_csv:
                 justices_reader = csv.DictReader(justices_csv)
-                for justice in justices_reader:
-                    db_connection.execute(justices_sql, (
-                        # Sqlite3 requires unicode.
-                        justice['shorthand'].decode('utf-8'),
-                        justice['short_name'].decode('utf-8'),
-                        justice['fullname'].decode('utf-8')
-                    ))
+                for row in justices_reader:
+                    Justice(*row).insert(db_connection)
         except Exception:
             print_err('Could not populate table `justices`')
             raise
