@@ -63,6 +63,25 @@ class CaseFiling(object):
     def filed_on(self):
         return self._opinion_cluster.get('date_filed')
 
+    def insert(self, db_connection):
+        sql = """
+            INSERT INTO case_filings (
+                docket_number,
+                url,
+                plain_text,
+                sha1,
+                filed_on
+            )
+            VALUES (?, ?, ?, ?, ?);
+        """
+        db_connection.execute(sql, (
+            self.docket_number,
+            self.url,
+            self.plain_text,
+            self.sha1,
+            self.filed_on
+        ))
+
     def __get(self, endpoint, filter_dict):
         filtered_endpoint = endpoint + filters_to_url_params(filter_dict)
         response = self._http_session.get(filtered_endpoint)

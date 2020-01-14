@@ -23,6 +23,9 @@ from .utils import project_path, warn
 def main():
     http_session = start_http_session()
     try:
+        # We'll defer commits until the end of each case filing so that
+        # each case filing and its opinions are contained by the same
+        # transaction.
         db_conn = start_db("DEFERRED")
         try:
             flagged_case_filings = set()
@@ -35,7 +38,7 @@ def main():
                     # Ignore flagged case filings for now.
                     warn('Ignoring {}'.format(case_filing))
                     continue
-                # TODO: save case filings
+                case_filing.insert(db_conn)
                 for opinion in parse_opinions(case_filing):
                     # Case Filing has no opinions.
                     if opinion is None:
@@ -43,7 +46,6 @@ def main():
                         break
                     # TODO: save opinions
                 # _, _, _ = save_opinions(db_conn, opinions)
-            # _, _ = save_active_docket(db_conn, active_docket)
         finally:
             db_conn.close()
     finally:
