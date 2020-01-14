@@ -20,15 +20,19 @@ class _Insertable(object):
 
 
 class Justice(_Insertable):
-    all = dict()
+    _all = dict()
 
     def __init__(self, shorthand, short_name, fullname):
         self.shorthand = shorthand
         self.short_name = short_name
         self.fullname = fullname
         # Cache the justice by shorthand and short name for lookup.
-        Justice.all[shorthand] = self
-        Justice.all[short_name] = self
+        Justice._all[shorthand] = self
+        Justice._all[short_name] = self
+
+    @staticmethod
+    def get(justice):
+        return Justice._all.get(justice)
 
     def insert(self, db_connection):
         sql = """
