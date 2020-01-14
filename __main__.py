@@ -1,6 +1,7 @@
 # encoding=utf8
 from __future__ import print_function
 
+import csv
 import sqlite3
 import string
 import sys
@@ -17,7 +18,46 @@ from .http import (
 )
 from .models import CaseFiling, Justice, MajorityOpinion, Opinion, OpinionType
 import regex
-from .utils import project_path, warn
+from .utils import print_err, project_path, warn
+
+
+def init():
+    db_connection = db.connect()
+    try:
+        # Load justices from CSV config file and populate the justice table.
+        justices_path = project_path('config', 'justices.csv')
+        justices_sql = """
+            INSERT INTO justices (
+                fullname,
+                short_name,
+                shorthand
+            )
+            VALUES (?, ?, ?); 
+        """
+        try:
+            with db_connection, open(justices_path) as justices_csv:
+                justices_reader = csv.DictReader(justices_csv)
+                for justice in justices_reader:
+                    db_connection.execute(justices_sql, (
+                        # Sqlite3 requires unicode.
+                        justice['fullname'].decode('utf-8'),
+                        justice['short_name'].decode('utf-8'),
+                        justice['shorthand'].decode('utf-8')
+                    ))
+        except Exception:
+            print_err('Could not populate table `justices`')
+            raise
+        # Populate the opinion type table.
+        opinion_types_sql = 'INSERT INTO opinion_types (type) VALUES (?);'
+        try:
+            with db_connection:
+                for opinion_type in list(OpinionType):
+                    db_connection.execute(opinion_types_sql, (str(opinion_type),))
+        except Exception:
+            print_err('Could not populate table `opinion_types`')
+            raise
+    finally:
+        db_connection.close()
 
 
 def main():
@@ -334,5 +374,6 @@ if __name__ == '__main__':
     reload(sys)
     sys.setdefaultencoding('utf8')
 
+    init()
     main()
     build()
