@@ -36,7 +36,7 @@ def main():
                     warn('Ignoring {}'.format(case_filing))
                     continue
                 # TODO: save case filings
-                for opinion in get_opinions(case_filing):
+                for opinion in parse_opinions(case_filing):
                     # Case Filing has no opinions.
                     if opinion is None:
                         flagged_case_filings.add(case_filing)
@@ -104,7 +104,7 @@ def save_active_docket(db_connection, active_docket):
     return inserted, ignored
 
 
-def get_opinions(case_filing):
+def parse_opinions(case_filing):
     opinion_tuples = regex.findall_opinions(case_filing.plain_text)
     if not len(opinion_tuples):
         # Case Filing has no opinions.
