@@ -86,9 +86,51 @@ def main():
                     # Case filing and opinions not inserted, so no
                     # concurrences to insert.
                     continue
-                # TODO: start insertion of concurrences.
+                # Insert concurrences.
+                concurrence_sql = """
+                    INSERT INTO concurrences (
+                        opinion_id,
+                        justice
+                    )
+                    VALUES (?, ?);
+                """
+                concurrences = []
                 for opinion in inserted_opinions:
                     opinion_id = opinion.get_id()
+                    # Insert a concurrence row for each concurring justice.
+                    for concurring_justice_name in opinion.concurring_justices:
+                        concurring_justice = Justice.get(concurring_justice_name)
+                        # TODO: move this to Opinion constructor?
+                        if concurring_justice is None:
+                            # See if we missed justices due to bad formatting
+                            # E.g., a missing comma between names
+                            justice_names, unknown_name = regex.findall_and_reduce(
+                                Justice.all_short_names(),
+                                concurring_justice_name
+                            )
+                            if justice_names:
+                                # Add the newly discovered concurring justices to
+                                # the opinion so that this loop will come back to them.
+                                opinion.concurring_justices.extend(justice_names)
+                            if unknown_name:
+                                # Part or all of the unknown name remains
+                                msg = (
+                                    "Encountered unknown concurring justice '{}' in {}".format(
+                                        concurring_justice_name.encode('utf-8'),
+                                        repr(opinion)
+                                    )
+                                )
+                                warn(msg)
+                            continue
+                        concurrences.append((opinion_id, concurring_justice.id))
+                try:
+                    with db_connection:
+                        db_connection.executemany(concurrence_sql, concurrences)
+                except sqlite3.Error as e:
+                    print_err('Could not insert concurrences for {} - {}'.format(
+                        case_filing.docket_number,
+                        e
+                    ))
         finally:
             db_connection.close()
     finally:

@@ -22,19 +22,29 @@ class _Insertable(object):
 
 
 class Justice(_Insertable):
-    _all = dict()
+    _all_by_shorthand = dict()
+    _all_by_short_name = dict()
 
     def __init__(self, shorthand, short_name, fullname):
         self.shorthand = shorthand
         self.short_name = short_name
         self.fullname = fullname
         # Cache the justice by shorthand and short name for lookup.
-        Justice._all[shorthand] = self
-        Justice._all[short_name] = self
+        Justice._all_by_shorthand[shorthand] = self
+        Justice._all_by_short_name[short_name] = self
 
     @staticmethod
     def get(justice):
-        return Justice._all.get(justice)
+        if justice in Justice._all_by_shorthand:
+            return Justice._all_by_shorthand.get(justice)
+        elif justice in Justice._all_by_short_name:
+            return Justice._all_by_short_name.get(justice)
+        else:
+            return None
+
+    @staticmethod
+    def all_short_names():
+        return Justice._all_by_short_name.keys()
 
     def insert(self, db_connection):
         sql = """
