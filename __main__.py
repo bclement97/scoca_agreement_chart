@@ -65,23 +65,27 @@ def main():
                     # Ignore flagged case filings for now.
                     warn('Ignoring {}'.format(case_filing))
                     continue
-                case_filing.insert(db_connection)
-                inserted_opinions = []
-                for opinion in parse_opinions(case_filing):
-                    # Case Filing has no opinions.
-                    if opinion is None:
-                        flagged_case_filings.add(case_filing)
-                        break
-                    if opinion.insert(db_connection):
-                        inserted_opinions.append(opinion)
-                # Done inserting case filing and opinions.
+                # Begin and commit transaction for inserting the case
+                # filing and its opinions.
                 try:
-                    db_connection.commit()
+                    with db_connection:
+                        case_filing.insert(db_connection)
+                        inserted_opinions = []
+                        for opinion in parse_opinions(case_filing):
+                            # Case Filing has no opinions.
+                            if opinion is None:
+                                flagged_case_filings.add(case_filing)
+                                break
+                            if opinion.insert(db_connection):
+                                inserted_opinions.append(opinion)
                 except sqlite3.Error as e:
                     print_err('Could not insert {} - {}'.format(
                         case_filing.docket_number,
                         e
                     ))
+                    # Case filing and opinions not inserted, so no
+                    # concurrences to insert.
+                    continue
                 # TODO: start insertion of concurrences.
                 for opinion in inserted_opinions:
                     opinion_id = opinion.get_id()
