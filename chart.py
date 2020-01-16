@@ -21,7 +21,7 @@ def build():
         chart = {}
         for i, j1 in enumerate(justices):
             for j2 in justices[i+1:]:
-                key = frozenset([j1.id, j2.id])
+                key = frozenset([j1.shorthand, j2.shorthand])
                 chart[key] = [0, 0]
         return chart
 
@@ -41,7 +41,7 @@ def build():
                     chart[key][1] += 1
 
     def create_concurrence_dict(justices):
-        return {j.id: [set(), set()] for j in justices}
+        return {j.shorthand: [set(), set()] for j in justices}
 
     def concurrence_add_concur(author_id, justice_id):
         # Justices can't concur with themselves.
@@ -71,7 +71,7 @@ def build():
     try:
         db_conn.row_factory = sqlite3.Row
 
-        justices = Justice.get_all(db_conn)
+        justices = Justice.all()
         count_chart = create_chart(justices)
         concurrence = create_concurrence_dict(justices)
         parent_op = None
@@ -79,7 +79,7 @@ def build():
         for op in db_conn.execute(opinion_sql):
             (docket_num, op_id, type_id, type_str, author, justice) = op
             # When we encounter a new docket number, ensure that it's a
-            # majority opinion (by nature of the SQL ordering).-=
+            # majority opinion (by nature of the SQL ordering).
             if parent_op is None or parent_op['docket_num'] != docket_num:
                 assert type_id == OpinionType.MAJORITY.value
                 if parent_op is not None:
@@ -143,7 +143,7 @@ def generate(chart, justices, indent=False):
                 line('th', j_left.shorthand)
                 # Chart body
                 for j_top in justices[col+1:]:
-                    key = frozenset([j_left.id, j_top.id])
+                    key = frozenset([j_left.shorthand, j_top.shorthand])
                     rate = int(round(chart[key]))
                     with tag('td'):
                         if rate > 90:
@@ -166,5 +166,5 @@ def generate(chart, justices, indent=False):
 def print_chart(chart, justices):
     for i, j1 in enumerate(justices):
         for j2 in justices[i+1:]:
-            key = frozenset([j1.id, j2.id])
-            print('({}, {}): {}'.format(j1.id, j2.id, chart[key]))
+            key = frozenset([j1.shorthand, j2.shorthand])
+            print('({}, {}): {}'.format(j1.shorthand, j2.shorthand, chart[key]))

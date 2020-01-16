@@ -124,7 +124,7 @@ def main():
                                 )
                                 warn(msg)
                             continue
-                        concurrences.append((opinion_id, concurring_justice.id))
+                        concurrences.append((opinion_id, concurring_justice.shorthand))
                 try:
                     with db_connection:
                         db_connection.executemany(concurrence_sql, concurrences)

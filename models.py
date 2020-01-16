@@ -22,6 +22,7 @@ class _Insertable(object):
 
 
 class Justice(_Insertable):
+    _all = []
     _all_by_shorthand = dict()
     _all_by_short_name = dict()
 
@@ -30,6 +31,7 @@ class Justice(_Insertable):
         self.short_name = short_name
         self.fullname = fullname
         # Cache the justice by shorthand and short name for lookup.
+        Justice._all.append(self)
         Justice._all_by_shorthand[shorthand] = self
         Justice._all_by_short_name[short_name] = self
 
@@ -41,6 +43,10 @@ class Justice(_Insertable):
             return Justice._all_by_short_name.get(justice)
         else:
             return None
+
+    @staticmethod
+    def all():
+        return Justice._all
 
     @staticmethod
     def all_short_names():
