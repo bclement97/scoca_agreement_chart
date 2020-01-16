@@ -66,12 +66,15 @@ def main():
                     warn('Ignoring {}'.format(case_filing))
                     continue
                 case_filing.insert(db_connection)
+                inserted_opinions = []
                 for opinion in parse_opinions(case_filing):
                     # Case Filing has no opinions.
                     if opinion is None:
                         flagged_case_filings.add(case_filing)
                         break
-                    opinion.insert(db_connection)
+                    if opinion.insert(db_connection):
+                        inserted_opinions.append(opinion)
+                # Done inserting case filing and opinions.
                 try:
                     db_connection.commit()
                 except sqlite3.Error as e:
@@ -79,6 +82,9 @@ def main():
                         case_filing.docket_number,
                         e
                     ))
+                # TODO: start insertion of concurrences.
+                for opinion in inserted_opinions:
+                    opinion_id = opinion.get_id()
         finally:
             db_connection.close()
     finally:

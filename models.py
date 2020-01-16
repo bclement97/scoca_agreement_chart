@@ -2,6 +2,7 @@ from enum import Enum, unique
 
 import requests
 
+import db
 from .http import (
     COURTLISTENER_BASE_URL, OPINION_CLUSTER_FILTERS, OPINION_INSTANCE_FILTERS,
     filters_to_url_params, get_response_json
@@ -171,6 +172,7 @@ class Opinion(_Insertable):
         self.effective_type = self.type
         if self.type == OpinionType.CONCURRING_AND_DISSENTING:
             self._prompt_effective_type()
+        self.id = None
 
     @property
     def utf8_authoring_justice(self):
@@ -180,6 +182,25 @@ class Opinion(_Insertable):
     def utf8_concurring_justices(self):
         return [justice.encode('utf-8')
                 for justice in self.concurring_justices]
+
+    @property
+    def _sql_tuple(self):
+        """Returns a tuple uniquely identifying this opinion to use in
+         sql queries.
+
+        Returns None if the authoring justice is not recognized (is not
+        in the Justices table.
+        """
+        try:
+            return (
+                self.case_filing.docket_number,
+                self.type.value,
+                self.effective_type.value,
+                # The try block is for this line: get() may return None.
+                Justice.get(self.authoring_justice).shorthand
+            )
+        except AttributeError:
+            return None
 
     def insert(self, db_connection):
         sql = """
@@ -191,8 +212,7 @@ class Opinion(_Insertable):
             )
             VALUES (?, ?, ?, ?);
         """
-        authoring_justice = Justice.get(self.authoring_justice)
-        if authoring_justice is None:
+        if self._sql_tuple is None:
             msg = (
                 "Encountered unknown authoring justice '{}' in {}".format(
                     self.authoring_justice.encode('utf-8'),
@@ -200,13 +220,35 @@ class Opinion(_Insertable):
                 )
             )
             warn(msg)
-            return
-        db_connection.execute(sql, (
-            self.case_filing.docket_number,
-            self.type.value,
-            self.effective_type.value,
-            authoring_justice.shorthand
-        ))
+            return False
+        db_connection.execute(sql, self._sql_tuple)
+        return True
+
+    def get_id(self, db_connection=None):
+        if self.id is not None:
+            # The ID has already been cached so just return it.
+            return self.id
+        sql = """
+            SELECT id FROM opinions
+            WHERE case_filing_docket_number = ?
+                AND opinion_type_id = ?
+                AND effective_op_type = ?
+                AND authoring_justice = ?;
+        """
+        try:
+            # DB_CONNECTION may be None, so it might raise an AttributeError.
+            cur = db_connection.execute(sql, self._sql_tuple)
+            # Cache the ID.
+            (self.id,) = cur.fetchone()
+            return self.id
+        except AttributeError:
+            # No DB connection was passed in, so we need to create a
+            # temporary one and restart the method.
+            db_connection = db.connect()
+            try:
+                return self.get_id(db_connection)
+            finally:
+                db_connection.close()
 
     def __str__(self):
         return '{} Opinion [{}] by {}'.format(
