@@ -30,7 +30,9 @@ def init():
             with db_connection, open(justices_path) as justices_csv:
                 justices_reader = csv.DictReader(justices_csv)
                 for row in justices_reader:
-                    Justice(*row).insert(db_connection)
+                    justice = Justice(row['shorthand'], row['short_name'],
+                                      row['fullname'])
+                    justice.insert(db_connection)
         except Exception:
             print_err('Could not populate table `justices`')
             raise
