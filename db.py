@@ -1,10 +1,10 @@
+import apsw
 import os.path
-import sqlite3
 
-from .utils import project_path, print_err
+import utils
 
 
-_DB_PATH = project_path('.db')
+_DB_PATH = utils.project_path('.db')
 
 
 def exists():
@@ -12,22 +12,18 @@ def exists():
 
 
 def init():
-    init_sql_path = project_path('init.sql')
+    init_sql_path = utils.project_path('init.sql')
     db_connection = connect()
     try:
-        try:
-            with db_connection, open(init_sql_path) as init_sql_file:
-                init_sql = init_sql_file.read()
-                db_connection.executescript(init_sql)
-        except Exception:
-            print_err('Could not initialize database')
-            raise
+        with db_connection, open(init_sql_path) as init_sql_file:
+            init_sql = init_sql_file.read()
+            db_connection.cursor().execute(init_sql)
     finally:
         db_connection.close()
 
 
-def connect(isolation_level=None):
-    return sqlite3.connect(_DB_PATH, isolation_level=isolation_level)
+def connect():
+    return apsw.Connection(_DB_PATH)
 
 
 # Initialize the database if it doesn't exist when this module is imported.

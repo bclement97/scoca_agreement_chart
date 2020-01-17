@@ -61,22 +61,12 @@ class Justice(_Insertable):
             )
             VALUES (?, ?, ?); 
         """
-        db_connection.execute(sql, (
+        db_connection.cursor().execute(sql, (
             # Sqlite3 requires unicode.
             self.shorthand.decode('utf-8'),
             self.short_name.decode('utf-8'),
             self.fullname.decode('utf-8')
         ))
-
-    # @staticmethod
-    # def get_all(db_connection):
-    #     sql = "SELECT shorthand, short_name, fullname FROM justices"
-    #     return [Justice(*row) for row in db_connection.execute(sql)]
-    #
-    # @staticmethod
-    # def get_all_by_short_name(db_connection):
-    #     justices = Justice.get_all(db_connection)
-    #     return {j.short_name: j for j in justices}
 
 
 class CaseFiling(_Insertable):
@@ -121,7 +111,7 @@ class CaseFiling(_Insertable):
             )
             VALUES (?, ?, ?, ?, ?);
         """
-        db_connection.execute(sql, (
+        db_connection.cursor().execute(sql, (
             self.docket_number,
             self.url,
             self.plain_text,
@@ -237,7 +227,12 @@ class Opinion(_Insertable):
             )
             warn(msg)
             return False
-        db_connection.execute(sql, self._sql_tuple)
+        db_connection.cursor().execute(sql, self._sql_tuple)
+        # TODO: does this work since changes made by cursors on the same
+        #  connection are visible to each other before commit? If so,
+        #  alter get_id().
+        self.get_id(db_connection)
+        print(self.id)
         return True
 
     def get_id(self, db_connection=None):
@@ -252,14 +247,12 @@ class Opinion(_Insertable):
                 AND authoring_justice = ?;
         """
         try:
-            # DB_CONNECTION may be None, so it might raise an AttributeError.
-            cur = db_connection.execute(sql, self._sql_tuple)
+            cur = db_connection.cursor()
+            cur.execute(sql, self._sql_tuple)
             # Cache the ID.
             (self.id,) = cur.fetchone()
             return self.id
         except AttributeError:
-            # No DB connection was passed in, so we need to create a
-            # temporary one and restart the method.
             db_connection = db.connect()
             try:
                 return self.get_id(db_connection)

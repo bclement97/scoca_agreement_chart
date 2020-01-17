@@ -1,7 +1,8 @@
 # encoding=utf8
 from __future__ import print_function
 
-import unicodecsv as csv
+import apsw
+import unicodecsv as csv  # This helps fix unicode issues.
 import sqlite3
 import string
 import sys
@@ -20,15 +21,14 @@ from .utils import print_err, project_path, warn
 
 
 def init():
-    # Defer commits to ensure either all justices/opinion types are
-    # inserted or none at all.
-    db_connection = db.connect('DEFERRED')
+    db_connection = db.connect()
     try:
         # Load justices from CSV config file and populate the justice table.
         justices_path = project_path('config', 'justices.csv')
         try:
             with db_connection, open(justices_path, 'rb') as justices_csv:
                 justices_reader = csv.DictReader(justices_csv)
+                # TODO: change?
                 for row in justices_reader:
                     justice = Justice(row['shorthand'], row['short_name'],
                                       row['fullname'])
@@ -40,8 +40,10 @@ def init():
         opinion_types_sql = 'INSERT INTO opinion_types (type) VALUES (?);'
         try:
             with db_connection:
-                for opinion_type in list(OpinionType):
-                    db_connection.execute(opinion_types_sql, (str(opinion_type),))
+                db_connection.cursor().executemany(
+                    opinion_types_sql,
+                    [(str(op_type),) for op_type in list(OpinionType)]
+                )
         except Exception:
             print_err('Could not populate table `opinion_types`')
             raise
@@ -52,10 +54,7 @@ def init():
 def main():
     http_session = start_http_session()
     try:
-        # We'll defer commits until the end of each case filing so that
-        # each case filing and its opinions are contained by the same
-        # transaction.
-        db_connection = db.connect('DEFERRED')
+        db_connection = db.connect()
         try:
             flagged_case_filings = set()
             for case_filing in get_active_docket(http_session):
@@ -80,7 +79,7 @@ def main():
                                 break
                             if opinion.insert(db_connection):
                                 inserted_opinions.append(opinion)
-                except sqlite3.Error as e:
+                except (apsw.Error, sqlite3.Error) as e:
                     print_err('Could not insert {} - {}'.format(
                         case_filing.docket_number,
                         e
@@ -127,8 +126,8 @@ def main():
                         concurrences.append((opinion_id, concurring_justice.shorthand))
                 try:
                     with db_connection:
-                        db_connection.executemany(concurrence_sql, concurrences)
-                except sqlite3.Error as e:
+                        db_connection.cursor().executemany(concurrence_sql, concurrences)
+                except (apsw.Error, sqlite3.Error) as e:
                     print_err('Could not insert concurrences for {} - {}'.format(
                         case_filing.docket_number,
                         e
