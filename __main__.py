@@ -1,7 +1,7 @@
 # encoding=utf8
 from __future__ import print_function
 
-import csv
+import unicodecsv as csv
 import sqlite3
 import string
 import sys
@@ -27,7 +27,7 @@ def init():
         # Load justices from CSV config file and populate the justice table.
         justices_path = project_path('config', 'justices.csv')
         try:
-            with db_connection, open(justices_path) as justices_csv:
+            with db_connection, open(justices_path, 'rb') as justices_csv:
                 justices_reader = csv.DictReader(justices_csv)
                 for row in justices_reader:
                     justice = Justice(row['shorthand'], row['short_name'],
