@@ -1,7 +1,8 @@
 # encoding=utf8
 from __future__ import print_function
 
-import csv
+import apsw
+import unicodecsv as csv  # This fixes many Unicode issues.
 import sqlite3
 import string
 import sys
@@ -20,121 +21,113 @@ from .utils import print_err, project_path, warn
 
 
 def init():
-    # Defer commits to ensure either all justices/opinion types are
-    # inserted or none at all.
-    db_connection = db.connect('DEFERRED')
+    db_connection = db.connect()
+    # Load justices from CSV config file and populate the justice table.
+    justices_path = project_path('config', 'justices.csv')
     try:
-        # Load justices from CSV config file and populate the justice table.
-        justices_path = project_path('config', 'justices.csv')
-        try:
-            with db_connection, open(justices_path) as justices_csv:
-                justices_reader = csv.DictReader(justices_csv)
-                for row in justices_reader:
-                    justice = Justice(row['shorthand'], row['short_name'],
-                                      row['fullname'])
-                    justice.insert(db_connection)
-        except Exception:
-            print_err('Could not populate table `justices`')
-            raise
-        # Populate the opinion type table.
-        opinion_types_sql = 'INSERT INTO opinion_types (type) VALUES (?);'
-        try:
-            with db_connection:
-                for opinion_type in list(OpinionType):
-                    db_connection.execute(opinion_types_sql, (str(opinion_type),))
-        except Exception:
-            print_err('Could not populate table `opinion_types`')
-            raise
-    finally:
-        db_connection.close()
+        with db_connection, open(justices_path, 'rb') as justices_csv:
+            justices_reader = csv.DictReader(justices_csv)
+            # TODO: change?
+            for row in justices_reader:
+                justice = Justice(row['shorthand'], row['short_name'],
+                                  row['fullname'])
+                justice.insert(db_connection)
+    except Exception:
+        print_err('Could not populate table `justices`')
+        raise
+    # Populate the opinion type table.
+    opinion_types_sql = 'INSERT INTO opinion_types (type) VALUES (?);'
+    try:
+        with db_connection:
+            db_connection.cursor().executemany(
+                opinion_types_sql,
+                [(str(op_type),) for op_type in list(OpinionType)]
+            )
+    except Exception:
+        print_err('Could not populate table `opinion_types`')
+        raise
 
 
 def main():
     http_session = start_http_session()
     try:
-        # We'll defer commits until the end of each case filing so that
-        # each case filing and its opinions are contained by the same
-        # transaction.
-        db_connection = db.connect('DEFERRED')
-        try:
-            flagged_case_filings = set()
-            for case_filing in get_active_docket(http_session):
-                # CaseFilings whose docket numbers end in a letter. Only 'A'
-                # and 'M' are known to occur, but others should be flagged
-                # regardless.
-                if case_filing.docket_number[-1] in string.ascii_letters:
-                    flagged_case_filings.add(case_filing)
-                    # Ignore flagged case filings for now.
-                    warn('Ignoring {}'.format(case_filing))
-                    continue
-                # Begin and commit transaction for inserting the case
-                # filing and its opinions.
-                try:
-                    with db_connection:
-                        case_filing.insert(db_connection)
-                        inserted_opinions = []
-                        for opinion in parse_opinions(case_filing):
-                            # Case Filing has no opinions.
-                            if opinion is None:
-                                flagged_case_filings.add(case_filing)
-                                break
-                            if opinion.insert(db_connection):
-                                inserted_opinions.append(opinion)
-                except sqlite3.Error as e:
-                    print_err('Could not insert {} - {}'.format(
-                        case_filing.docket_number,
-                        e
-                    ))
-                    # Case filing and opinions not inserted, so no
-                    # concurrences to insert.
-                    continue
-                # Insert concurrences.
-                concurrence_sql = """
-                    INSERT INTO concurrences (
-                        opinion_id,
-                        justice
-                    )
-                    VALUES (?, ?);
-                """
-                concurrences = []
-                for opinion in inserted_opinions:
-                    opinion_id = opinion.get_id()
-                    # Insert a concurrence row for each concurring justice.
-                    for concurring_justice_name in opinion.concurring_justices:
-                        concurring_justice = Justice.get(concurring_justice_name)
-                        # TODO: move this to Opinion constructor?
-                        if concurring_justice is None:
-                            # See if we missed justices due to bad formatting
-                            # E.g., a missing comma between names
-                            justice_names, unknown_name = regex.findall_and_reduce(
-                                Justice.all_short_names(),
-                                concurring_justice_name
-                            )
-                            if justice_names:
-                                # Add the newly discovered concurring justices to
-                                # the opinion so that this loop will come back to them.
-                                opinion.concurring_justices.extend(justice_names)
-                            if unknown_name:
-                                # Part or all of the unknown name remains
-                                msg = (
-                                    "Encountered unknown concurring justice '{}' in {}".format(
-                                        concurring_justice_name.encode('utf-8'),
-                                        repr(opinion)
-                                    )
+        db_connection = db.connect()
+        flagged_case_filings = set()
+        for case_filing in get_active_docket(http_session):
+            # CaseFilings whose docket numbers end in a letter. Only 'A'
+            # and 'M' are known to occur, but others should be flagged
+            # regardless.
+            if case_filing.docket_number[-1] in string.ascii_letters:
+                flagged_case_filings.add(case_filing)
+                # Ignore flagged case filings for now.
+                warn('Ignoring {}'.format(case_filing))
+                continue
+            # Begin and commit transaction for inserting the case
+            # filing and its opinions.
+            try:
+                with db_connection:
+                    case_filing.insert(db_connection)
+                    inserted_opinions = []
+                    for opinion in parse_opinions(case_filing):
+                        # Case Filing has no opinions.
+                        if opinion is None:
+                            flagged_case_filings.add(case_filing)
+                            break
+                        if opinion.insert(db_connection):
+                            inserted_opinions.append(opinion)
+            except (apsw.Error, sqlite3.Error) as e:
+                print_err('Could not insert {} - {}'.format(
+                    case_filing.docket_number,
+                    e
+                ))
+                # Case filing and opinions not inserted, so no
+                # concurrences to insert.
+                continue
+            # Insert concurrences.
+            concurrence_sql = """
+                INSERT INTO concurrences (
+                    opinion_id,
+                    justice
+                )
+                VALUES (?, ?);
+            """
+            concurrences = []
+            for opinion in inserted_opinions:
+                opinion_id = opinion.get_id()
+                # Insert a concurrence row for each concurring justice.
+                for concurring_justice_name in opinion.concurring_justices:
+                    concurring_justice = Justice.get(concurring_justice_name)
+                    # TODO: move this to Opinion constructor?
+                    if concurring_justice is None:
+                        # See if we missed justices due to bad formatting
+                        # E.g., a missing comma between names
+                        justice_names, unknown_name = regex.findall_and_reduce(
+                            Justice.all_short_names(),
+                            concurring_justice_name
+                        )
+                        if justice_names:
+                            # Add the newly discovered concurring justices to
+                            # the opinion so that this loop will come back to them.
+                            opinion.concurring_justices.extend(justice_names)
+                        if unknown_name:
+                            # Part or all of the unknown name remains
+                            msg = (
+                                "Encountered unknown concurring justice '{}' in {}".format(
+                                    concurring_justice_name.encode('utf-8'),
+                                    repr(opinion)
                                 )
-                                warn(msg)
-                            continue
-                        concurrences.append((opinion_id, concurring_justice.shorthand))
-                try:
-                    with db_connection:
-                        db_connection.executemany(concurrence_sql, concurrences)
-                except sqlite3.Error as e:
-                    print_err('Could not insert concurrences for {} - {}'.format(
-                        case_filing.docket_number,
-                        e
-                    ))
-        finally:
-            db_connection.close()
+                            )
+                            warn(msg)
+                        continue
+                    concurrences.append((opinion_id, concurring_justice.shorthand))
+            try:
+                with db_connection:
+                    db_connection.cursor().executemany(concurrence_sql, concurrences)
+            except (apsw.Error, sqlite3.Error) as e:
+                print_err('Could not insert concurrences for {} - {}'.format(
+                    case_filing.docket_number,
+                    e
+                ))
     finally:
         http_session.close()
 

@@ -61,7 +61,7 @@ class Justice(_Insertable):
             )
             VALUES (?, ?, ?); 
         """
-        db_connection.execute(sql, (
+        db_connection.cursor().execute(sql, (
             # Sqlite3 requires unicode.
             self.shorthand.decode('utf-8'),
             self.short_name.decode('utf-8'),
@@ -121,7 +121,7 @@ class CaseFiling(_Insertable):
             )
             VALUES (?, ?, ?, ?, ?);
         """
-        db_connection.execute(sql, (
+        db_connection.cursor().execute(sql, (
             self.docket_number,
             self.url,
             self.plain_text,
@@ -237,13 +237,20 @@ class Opinion(_Insertable):
             )
             warn(msg)
             return False
-        db_connection.execute(sql, self._sql_tuple)
+        db_connection.cursor().execute(sql, self._sql_tuple)
+        # TODO: does this work since changes made by cursors on the same
+        #  connection are visible to each other before commit? If so,
+        #  alter get_id().
+        self.get_id(db_connection)
+        print(self.id)
         return True
 
     def get_id(self, db_connection=None):
         if self.id is not None:
             # The ID has already been cached so just return it.
             return self.id
+        elif db_connection is None:
+            db_connection = db.connect()
         sql = """
             SELECT id FROM opinions
             WHERE case_filing_docket_number = ?
@@ -251,20 +258,11 @@ class Opinion(_Insertable):
                 AND effective_op_type = ?
                 AND authoring_justice = ?;
         """
-        try:
-            # DB_CONNECTION may be None, so it might raise an AttributeError.
-            cur = db_connection.execute(sql, self._sql_tuple)
-            # Cache the ID.
-            (self.id,) = cur.fetchone()
-            return self.id
-        except AttributeError:
-            # No DB connection was passed in, so we need to create a
-            # temporary one and restart the method.
-            db_connection = db.connect()
-            try:
-                return self.get_id(db_connection)
-            finally:
-                db_connection.close()
+        cur = db_connection.cursor()
+        cur.execute(sql, self._sql_tuple)
+        # Cache the ID.
+        (self.id,) = cur.fetchone()
+        return self.id
 
     def __str__(self):
         return '{} Opinion [{}] by {}'.format(

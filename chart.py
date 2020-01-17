@@ -67,48 +67,45 @@ def build():
         ORDER BY docket_num, ot.id, author;
     """
 
-    db_conn = db.connect()
-    try:
-        db_conn.row_factory = sqlite3.Row
+    cur = db.connect().cursor()
+    # db_connection.row_factory = sqlite3.Row
 
-        justices = Justice.all()
-        count_chart = create_chart(justices)
-        concurrence = create_concurrence_dict(justices)
-        parent_op = None
+    justices = Justice.all()
+    count_chart = create_chart(justices)
+    concurrence = create_concurrence_dict(justices)
+    majority_op = None
 
-        for op in db_conn.execute(opinion_sql):
-            (docket_num, op_id, type_id, type_str, author, justice) = op
-            # When we encounter a new docket number, ensure that it's a
-            # majority opinion (by nature of the SQL ordering).
-            if parent_op is None or parent_op['docket_num'] != docket_num:
-                assert type_id == OpinionType.MAJORITY.value
-                if parent_op is not None:
-                    # Encountered a new, non-first case filing.
-                    update_chart(count_chart, concurrence)
-                    concurrence = create_concurrence_dict(justices)
-                parent_op = op
+    for op in cur.execute(opinion_sql):
+        (docket_num, op_id, type_id, type_str, author, justice) = op
+        # When we encounter a new docket number, ensure that it's a
+        # majority opinion (by nature of the SQL ordering).
+        if majority_op is None or majority_op[0] != docket_num:
+            assert type_id == OpinionType.MAJORITY.value
+            if majority_op is not None:
+                # Encountered a new, non-first case filing.
+                update_chart(count_chart, concurrence)
+                concurrence = create_concurrence_dict(justices)
+            majority_op = op
 
-            if type_id == OpinionType.MAJORITY.value:
-                if justice:
-                    concurrence_add_concur(author, justice)
-            elif type_id == OpinionType.CONCURRING.value:
-                concurrence_add_concur(parent_op['author'], author)
-                if justice:
-                    concurrence_add_concur(parent_op['author'], justice)
-                    concurrence_add_concur(author, justice)
-            elif type_id == OpinionType.DISSENTING.value:
-                concurrence_add_dissent(parent_op['author'], author)
-                if justice:
-                    concurrence_add_dissent(parent_op['author'], justice)
-                    concurrence_add_concur(author, justice)
-            else:
-                assert type_id == OpinionType.CONCURRING_AND_DISSENTING.value
-                assert False, (
-                    "Effective type for Opinion ID#{} incorrectly set " +
-                    "to 'Concurring and Dissenting'"
-                ).format(op_id)
-    finally:
-        db_conn.close()
+        if type_id == OpinionType.MAJORITY.value:
+            if justice:
+                concurrence_add_concur(author, justice)
+        elif type_id == OpinionType.CONCURRING.value:
+            concurrence_add_concur(majority_op[4], author)
+            if justice:
+                concurrence_add_concur(majority_op[4], justice)
+                concurrence_add_concur(author, justice)
+        elif type_id == OpinionType.DISSENTING.value:
+            concurrence_add_dissent(majority_op[4], author)
+            if justice:
+                concurrence_add_dissent(majority_op[4], justice)
+                concurrence_add_concur(author, justice)
+        else:
+            assert type_id == OpinionType.CONCURRING_AND_DISSENTING.value
+            assert False, (
+                "Effective type for Opinion ID#{} incorrectly set " +
+                "to 'Concurring and Dissenting'"
+            ).format(op_id)
 
     update_chart(count_chart, concurrence)
     rate_chart = create_chart(justices)
