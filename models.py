@@ -68,16 +68,6 @@ class Justice(_Insertable):
             self.fullname.decode('utf-8')
         ))
 
-    # @staticmethod
-    # def get_all(db_connection):
-    #     sql = "SELECT shorthand, short_name, fullname FROM justices"
-    #     return [Justice(*row) for row in db_connection.execute(sql)]
-    #
-    # @staticmethod
-    # def get_all_by_short_name(db_connection):
-    #     justices = Justice.get_all(db_connection)
-    #     return {j.short_name: j for j in justices}
-
 
 class CaseFiling(_Insertable):
     def __init__(self, docket_entry, http_session=requests):
