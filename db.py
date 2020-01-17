@@ -14,9 +14,12 @@ def exists():
 def init():
     init_sql_path = utils.project_path('init.sql')
     db_connection = connect()
-    with db_connection, open(init_sql_path) as init_sql_file:
-        init_sql = init_sql_file.read()
-        db_connection.cursor().execute(init_sql)
+    try:
+        with db_connection, open(init_sql_path) as init_sql_file:
+            init_sql = init_sql_file.read()
+            db_connection.cursor().execute(init_sql)
+    finally:
+        db_connection.close()
 
 
 def connect():

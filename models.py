@@ -249,8 +249,6 @@ class Opinion(_Insertable):
         if self.id is not None:
             # The ID has already been cached so just return it.
             return self.id
-        elif db_connection is None:
-            db_connection = db.connect()
         sql = """
             SELECT id FROM opinions
             WHERE case_filing_docket_number = ?
@@ -258,11 +256,18 @@ class Opinion(_Insertable):
                 AND effective_op_type = ?
                 AND authoring_justice = ?;
         """
-        cur = db_connection.cursor()
-        cur.execute(sql, self._sql_tuple)
-        # Cache the ID.
-        (self.id,) = cur.fetchone()
-        return self.id
+        try:
+            cur = db_connection.cursor()
+            cur.execute(sql, self._sql_tuple)
+            # Cache the ID.
+            (self.id,) = cur.fetchone()
+            return self.id
+        except AttributeError:
+            db_connection = db.connect()
+            try:
+                return self.get_id(db_connection)
+            finally:
+                db_connection.close()
 
     def __str__(self):
         return '{} Opinion [{}] by {}'.format(

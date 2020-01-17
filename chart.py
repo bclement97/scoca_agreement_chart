@@ -67,15 +67,20 @@ def build():
         ORDER BY docket_num, ot.id, author;
     """
 
-    cur = db.connect().cursor()
-    # db_connection.row_factory = sqlite3.Row
-
     justices = Justice.all()
     count_chart = create_chart(justices)
     concurrence = create_concurrence_dict(justices)
     majority_op = None
 
-    for op in cur.execute(opinion_sql):
+    db_connection = db.connect()
+    try:
+        cur = db_connection.cursor()
+        cur.execute(opinion_sql)
+        opinions = cur.fetchall()
+    finally:
+        db_connection.close()
+
+    for op in opinions:
         (docket_num, op_id, type_id, type_str, author, justice) = op
         # When we encounter a new docket number, ensure that it's a
         # majority opinion (by nature of the SQL ordering).
