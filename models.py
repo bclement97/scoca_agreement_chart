@@ -302,7 +302,11 @@ class Opinion(_Insertable):
             prompt = (
                 "Invalid input. Try one of the following: {}\n"
                 "Effective Type of {} ({}): "
-            ).format(', '.join(valid_inputs), self, valid_inputs_str)
+            ).format(
+                ', '.join(concur_inputs + dissent_inputs),
+                self,
+                valid_inputs_str
+            )
 
 
 class MajorityOpinion(Opinion):
