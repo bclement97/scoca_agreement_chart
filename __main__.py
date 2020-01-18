@@ -123,7 +123,7 @@ def insert_case(db_connection, case_filing):
 def insert_concurrences(db_connection, opinions):
     assert len(opinions), 'There should always be at least one opinion (majority).'
     # Insert concurrences.
-    concurrence_sql = """
+    sql = """
         INSERT INTO concurrences (
             opinion_id,
             justice
@@ -161,7 +161,7 @@ def insert_concurrences(db_connection, opinions):
     assert len(concurrences), 'There are no concurrences; the majority opinion always has some.'
     try:
         with db_connection:
-            db_connection.cursor().executemany(concurrence_sql, concurrences)
+            db_connection.cursor().executemany(sql, concurrences)
     except (apsw.Error, sqlite3.Error) as e:
         docket_number = opinions[0].case_filing.docket_number
         print_err('Could not insert concurrences for {} - {}'.format(
