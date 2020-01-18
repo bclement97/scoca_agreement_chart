@@ -63,29 +63,12 @@ def main():
                 # regardless.
                 if case_filing.docket_number[-1] in string.ascii_letters:
                     flagged_case_filings.add(case_filing)
-                    # Ignore flagged case filings for now.
+                    # TODO: Ignore flagged case filings for now.
                     warn('Ignoring {}'.format(case_filing))
                     continue
-                # Begin and commit transaction for inserting the case
-                # filing and its opinions.
-                try:
-                    with db_connection:
-                        case_filing.insert(db_connection)
-                        inserted_opinions = []
-                        for opinion in parse_opinions(case_filing):
-                            # Case Filing has no opinions.
-                            if opinion is None:
-                                flagged_case_filings.add(case_filing)
-                                break
-                            if opinion.insert(db_connection):
-                                inserted_opinions.append(opinion)
-                except (apsw.Error, sqlite3.Error) as e:
-                    print_err('Could not insert {} - {}'.format(
-                        case_filing.docket_number,
-                        e
-                    ))
-                    # Case filing and opinions not inserted, so no
-                    # concurrences to insert.
+                inserted_opinions = insert_case(db_connection, case_filing)
+                if inserted_opinions is None:
+                    # Case filing was not inserted.
                     continue
                 # Insert concurrences.
                 concurrence_sql = """
@@ -145,6 +128,31 @@ def get_active_docket(http_session, filters=DOCKET_LIST_FILTERS):
         for docket_entry in response['results']:
             yield CaseFiling(docket_entry, http_session)
         next_page = response.get('next')
+
+
+def insert_case(db_connection, case_filing):
+    # Begin and commit transaction for inserting the case
+    # filing and its opinions.
+    inserted_opinions = []
+    try:
+        with db_connection:
+            case_filing.insert(db_connection)
+            for opinion in parse_opinions(case_filing):
+                # Case Filing has no opinions.
+                if opinion is None:
+                    # flagged_case_filings.add(case_filing)
+                    break
+                if opinion.insert(db_connection):
+                    inserted_opinions.append(opinion)
+    except (apsw.Error, sqlite3.Error) as e:
+        print_err('Could not insert {} - {}'.format(
+            case_filing.docket_number,
+            e
+        ))
+        # Case filing and opinions not inserted, so no
+        # concurrences to insert.
+        return None
+    return inserted_opinions
 
 
 def parse_opinions(case_filing):
