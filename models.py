@@ -71,13 +71,16 @@ class Justice(_Insertable):
 
 class CaseFiling(_Insertable):
     def __init__(self, docket_entry, http_session=requests):
+        self.opinions = []
+
         self._docket_entry = docket_entry
         self._http_session = http_session
         self._opinion_cluster = None
         self._opinion = None
 
-        self.fetch_opinion_cluster()
-        self.fetch_opinion()
+        self._fetch_opinion_cluster()
+        self._fetch_opinion()
+        self._parse_opinions()
 
     @property
     def docket_number(self):
@@ -124,15 +127,23 @@ class CaseFiling(_Insertable):
         response = self._http_session.get(filtered_endpoint)
         return get_response_json(response)
 
-    def fetch_opinion_cluster(self):
+    def _fetch_opinion_cluster(self):
         clusters = self._docket_entry.get('clusters')
         _assert_unit_list(clusters)
         self._opinion_cluster = self.__get(clusters[0], OPINION_CLUSTER_FILTERS)
 
-    def fetch_opinion(self):
+    def _fetch_opinion(self):
         opinions = self._opinion_cluster.get('sub_opinions')
         _assert_unit_list(opinions)
         self._opinion = self.__get(opinions[0], OPINION_INSTANCE_FILTERS)
+
+    def _parse_opinions(self):
+        opinion_tuples = regex.findall_opinions(self.plain_text)
+        if len(opinion_tuples):
+            majority_tuple, secondary_tuples = opinion_tuples[0], opinion_tuples[1:]
+            self.opinions.append(MajorityOpinion(self, *majority_tuple[:3]))
+            for tup in secondary_tuples:
+                self.opinions.append(Opinion(self, *tup[3:]))
 
     def __str__(self):
         return self.docket_number

@@ -15,7 +15,7 @@ from .http import (
     DOCKET_LIST_ENDPOINT, DOCKET_LIST_FILTERS,
     filters_to_url_params, get_response_json, start_http_session
 )
-from .models import CaseFiling, Justice, MajorityOpinion, Opinion, OpinionType
+from .models import CaseFiling, Justice, OpinionType
 import regex
 from .utils import print_err, project_path, warn
 
@@ -103,7 +103,7 @@ def insert_case(db_connection, case_filing):
     try:
         with db_connection:
             case_filing.insert(db_connection)
-            for opinion in parse_opinions(case_filing):
+            for opinion in case_filing.opinions:
                 # Case Filing has no opinions.
                 if opinion is None:
                     break
@@ -118,18 +118,6 @@ def insert_case(db_connection, case_filing):
         # concurrences to insert.
         return None
     return inserted_opinions
-
-
-def parse_opinions(case_filing):
-    opinion_tuples = regex.findall_opinions(case_filing.plain_text)
-    if not len(opinion_tuples):
-        # Case Filing has no opinions.
-        yield None
-        return
-    majority_tuple, secondary_tuples = opinion_tuples[0], opinion_tuples[1:]
-    yield MajorityOpinion(case_filing, *majority_tuple[:3])
-    for tup in secondary_tuples:
-        yield Opinion(case_filing, *tup[3:])
 
 
 def insert_concurrences(db_connection, opinions):
