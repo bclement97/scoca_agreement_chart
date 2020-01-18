@@ -52,19 +52,24 @@ def init():
 
 
 def main():
+    # TODO: for future use
+    flagged_cases = set()
+
+    def flag(case_filing, msg):
+        flagged_cases.add(case_filing)
+        warn(msg.format(case_filing))
+
     http_session = start_http_session()
     try:
         db_connection = db.connect()
         try:
-            flagged_case_filings = set()
             for case_filing in get_active_docket(http_session):
                 # CaseFilings whose docket numbers end in a letter. Only 'A'
                 # and 'M' are known to occur, but others should be flagged
                 # regardless.
                 if case_filing.docket_number[-1] in string.ascii_letters:
-                    flagged_case_filings.add(case_filing)
                     # TODO: Ignore flagged case filings for now.
-                    warn('Ignoring {}'.format(case_filing))
+                    flag(case_filing, 'Ignoring {}')
                     continue
 
                 inserted_opinions = insert_case(db_connection, case_filing)
@@ -73,8 +78,7 @@ def main():
                     continue
 
                 if not len(inserted_opinions):
-                    flagged_case_filings.add(case_filing)
-                    warn('{} has no opinions'.format(case_filing))
+                    flag(case_filing, '{} has no opinions')
                 else:
                     insert_concurrences(db_connection, inserted_opinions)
         finally:
