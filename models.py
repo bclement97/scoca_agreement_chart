@@ -63,9 +63,9 @@ class Justice(_Insertable):
         """
         db_connection.cursor().execute(sql, (
             # Sqlite3 requires unicode.
-            self.shorthand.decode('utf-8'),
-            self.short_name.decode('utf-8'),
-            self.fullname.decode('utf-8')
+            self.shorthand,
+            self.short_name,
+            self.fullname
         ))
 
 
@@ -192,15 +192,6 @@ class Opinion(_Insertable):
         self.id = None
 
     @property
-    def utf8_authoring_justice(self):
-        return self.authoring_justice.encode('utf-8')
-
-    @property
-    def utf8_concurring_justices(self):
-        return [justice.encode('utf-8')
-                for justice in self.concurring_justices]
-
-    @property
     def _sql_tuple(self):
         """Returns a tuple uniquely identifying this opinion to use in
          sql queries.
@@ -232,7 +223,7 @@ class Opinion(_Insertable):
         if self._sql_tuple is None:
             msg = (
                 "Encountered unknown authoring justice '{}' in {}".format(
-                    self.authoring_justice.encode('utf-8'),
+                    self.authoring_justice,
                     repr(self)
                 )
             )
@@ -261,15 +252,15 @@ class Opinion(_Insertable):
         return '{} Opinion [{}] by {}'.format(
             str(self.type).upper(),
             self.case_filing.docket_number,
-            self.utf8_authoring_justice
+            self.authoring_justice
         )
 
     def __repr__(self):
         return '<{} Opinion [{}]: {} ({})>'.format(
             str(self.type).upper(),
             self.case_filing.docket_number,
-            self.utf8_authoring_justice,
-            ', '.join(self.utf8_concurring_justices)
+            self.authoring_justice,
+            ', '.join(self.concurring_justices)
         )
 
     def _prompt_effective_type(self):

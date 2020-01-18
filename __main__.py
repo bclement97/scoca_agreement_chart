@@ -151,7 +151,7 @@ def insert_concurrences(db_connection, opinions):
                     # Part or all of the unknown name remains
                     msg = (
                         "Encountered unknown concurring justice '{}' in {}".format(
-                            concurring_justice_name.encode('utf-8'),
+                            concurring_justice_name,
                             repr(op)
                         )
                     )

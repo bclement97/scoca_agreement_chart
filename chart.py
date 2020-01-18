@@ -158,7 +158,7 @@ def generate(chart, justices, indent=False):
         for j in justices:
             with tag('tr'):
                 line('td', j.shorthand)
-                line('td', j.fullname.encode('utf-8'))
+                line('td', j.fullname)
 
     return doc.getvalue() if not indent else yattag.indent(doc.getvalue(),
                                                            indentation='  ',
