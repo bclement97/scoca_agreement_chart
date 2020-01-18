@@ -15,5 +15,5 @@ def print_err(*msg):
     print('ERROR:', *msg, file=sys.stderr)
 
 
-def warn(msg):
-    warnings.warn(msg, RuntimeWarning, stacklevel=2)
+def warn(msg, stacklevel=1):
+    warnings.warn(msg, RuntimeWarning, stacklevel=stacklevel+1)

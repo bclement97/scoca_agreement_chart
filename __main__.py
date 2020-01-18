@@ -57,7 +57,7 @@ def main():
 
     def flag(case_filing, msg):
         flagged_cases.add(case_filing)
-        warn(msg.format(case_filing))
+        warn(msg.format(case_filing), stacklevel=2)
 
     http_session = start_http_session()
     try:
