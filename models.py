@@ -2,7 +2,6 @@ from enum import Enum, unique
 
 import requests
 
-import db
 from .http import (
     COURTLISTENER_BASE_URL, OPINION_CLUSTER_FILTERS, OPINION_INSTANCE_FILTERS,
     filters_to_url_params, get_response_json
