@@ -66,55 +66,17 @@ def main():
                     # TODO: Ignore flagged case filings for now.
                     warn('Ignoring {}'.format(case_filing))
                     continue
+
                 inserted_opinions = insert_case(db_connection, case_filing)
                 if inserted_opinions is None:
                     # Case filing was not inserted.
                     continue
-                # Insert concurrences.
-                concurrence_sql = """
-                    INSERT INTO concurrences (
-                        opinion_id,
-                        justice
-                    )
-                    VALUES (?, ?);
-                """
-                concurrences = []
-                for opinion in inserted_opinions:
-                    opinion_id = opinion.get_id()
-                    # Insert a concurrence row for each concurring justice.
-                    for concurring_justice_name in opinion.concurring_justices:
-                        concurring_justice = Justice.get(concurring_justice_name)
-                        # TODO: move this to Opinion constructor?
-                        if concurring_justice is None:
-                            # See if we missed justices due to bad formatting
-                            # E.g., a missing comma between names
-                            justice_names, unknown_name = regex.findall_and_reduce(
-                                Justice.all_short_names(),
-                                concurring_justice_name
-                            )
-                            if justice_names:
-                                # Add the newly discovered concurring justices to
-                                # the opinion so that this loop will come back to them.
-                                opinion.concurring_justices.extend(justice_names)
-                            if unknown_name:
-                                # Part or all of the unknown name remains
-                                msg = (
-                                    "Encountered unknown concurring justice '{}' in {}".format(
-                                        concurring_justice_name.encode('utf-8'),
-                                        repr(opinion)
-                                    )
-                                )
-                                warn(msg)
-                            continue
-                        concurrences.append((opinion_id, concurring_justice.shorthand))
-                try:
-                    with db_connection:
-                        db_connection.cursor().executemany(concurrence_sql, concurrences)
-                except (apsw.Error, sqlite3.Error) as e:
-                    print_err('Could not insert concurrences for {} - {}'.format(
-                        case_filing.docket_number,
-                        e
-                    ))
+
+                if not len(inserted_opinions):
+                    flagged_case_filings.add(case_filing)
+                    warn('{} has no opinions'.format(case_filing))
+                else:
+                    insert_concurrences(db_connection, inserted_opinions)
         finally:
             db_connection.close()
     finally:
@@ -140,7 +102,6 @@ def insert_case(db_connection, case_filing):
             for opinion in parse_opinions(case_filing):
                 # Case Filing has no opinions.
                 if opinion is None:
-                    # flagged_case_filings.add(case_filing)
                     break
                 if opinion.insert(db_connection):
                     inserted_opinions.append(opinion)
@@ -165,6 +126,57 @@ def parse_opinions(case_filing):
     yield MajorityOpinion(case_filing, *majority_tuple[:3])
     for tup in secondary_tuples:
         yield Opinion(case_filing, *tup[3:])
+
+
+def insert_concurrences(db_connection, opinions):
+    assert len(opinions), 'There should always be at least one opinion (majority).'
+    # Insert concurrences.
+    concurrence_sql = """
+        INSERT INTO concurrences (
+            opinion_id,
+            justice
+        )
+        VALUES (?, ?);
+    """
+    concurrences = []
+    for op in opinions:
+        opinion_id = op.get_id()
+        # Insert a concurrence row for each concurring justice.
+        for concurring_justice_name in op.concurring_justices:
+            concurring_justice = Justice.get(concurring_justice_name)
+            # TODO: move this to Opinion constructor?
+            if concurring_justice is None:
+                # See if we missed justices due to bad formatting
+                # E.g., a missing comma between names
+                justice_names, unknown_name = regex.findall_and_reduce(
+                    Justice.all_short_names(),
+                    concurring_justice_name
+                )
+                if justice_names:
+                    # Add the newly discovered concurring justices to
+                    # the opinion so that this loop will come back to them.
+                    op.concurring_justices.extend(justice_names)
+                if unknown_name:
+                    # Part or all of the unknown name remains
+                    msg = (
+                        "Encountered unknown concurring justice '{}' in {}".format(
+                            concurring_justice_name.encode('utf-8'),
+                            repr(op)
+                        )
+                    )
+                    warn(msg)
+                continue
+            concurrences.append((opinion_id, concurring_justice.shorthand))
+    assert len(concurrences), 'There are no concurrences; the majority opinion always has some.'
+    try:
+        with db_connection:
+            db_connection.cursor().executemany(concurrence_sql, concurrences)
+    except (apsw.Error, sqlite3.Error) as e:
+        docket_number = opinions[0].case_filing.docket_number
+        print_err('Could not insert concurrences for {} - {}'.format(
+            docket_number,
+            e
+        ))
 
 
 if __name__ == '__main__':
