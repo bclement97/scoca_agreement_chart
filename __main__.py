@@ -132,7 +132,6 @@ def insert_concurrences(db_connection, opinions):
     """
     concurrences = []
     for op in opinions:
-        opinion_id = op.get_id()
         # Insert a concurrence row for each concurring justice.
         for concurring_justice_name in op.concurring_justices:
             concurring_justice = Justice.get(concurring_justice_name)
@@ -158,7 +157,7 @@ def insert_concurrences(db_connection, opinions):
                     )
                     warn(msg)
                 continue
-            concurrences.append((opinion_id, concurring_justice.shorthand))
+            concurrences.append((op.id, concurring_justice.shorthand))
     assert len(concurrences), 'There are no concurrences; the majority opinion always has some.'
     try:
         with db_connection:

@@ -238,18 +238,12 @@ class Opinion(_Insertable):
             )
             warn(msg)
             return False
-        db_connection.cursor().execute(sql, self._sql_tuple)
-        # TODO: does this work since changes made by cursors on the same
-        #  connection are visible to each other before commit? If so,
-        #  alter get_id().
-        self.get_id(db_connection)
-        print(self.id)
+        cur = db_connection.cursor()
+        cur.execute(sql, self._sql_tuple)
+        self._fetch_id(cur)
         return True
 
-    def get_id(self, db_connection=None):
-        if self.id is not None:
-            # The ID has already been cached so just return it.
-            return self.id
+    def _fetch_id(self, cursor):
         sql = """
             SELECT id FROM opinions
             WHERE case_filing_docket_number = ?
@@ -257,18 +251,11 @@ class Opinion(_Insertable):
                 AND effective_op_type = ?
                 AND authoring_justice = ?;
         """
-        try:
-            cur = db_connection.cursor()
-            cur.execute(sql, self._sql_tuple)
-            # Cache the ID.
-            (self.id,) = cur.fetchone()
-            return self.id
-        except AttributeError:
-            db_connection = db.connect()
-            try:
-                return self.get_id(db_connection)
-            finally:
-                db_connection.close()
+        cursor.execute(sql, self._sql_tuple)
+        # Cache the ID.
+        (self.id,) = cursor.fetchone()
+        print(self.id)
+        return self.id
 
     def __str__(self):
         return '{} Opinion [{}] by {}'.format(
