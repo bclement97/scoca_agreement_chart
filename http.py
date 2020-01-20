@@ -1,6 +1,5 @@
 import os
 import urllib
-import warnings
 
 from cachecontrol import CacheControl
 from cachecontrol.caches.file_cache import FileCache
@@ -77,8 +76,7 @@ def get_requests_header():
     if token:
         header['Authorization'] = 'Token {}'.format(token)
     else:
-        warnings.warn('No Court Listener API authorization token found.',
-                      RuntimeWarning)
+        utils.warn('No Court Listener API authorization token found.')
     return header
 
 
