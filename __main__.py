@@ -87,8 +87,9 @@ def main():
         http_session.close()
 
 
-def get_active_docket(http_session, filters=DOCKET_LIST_FILTERS):
-    next_page = DOCKET_LIST_ENDPOINT + filters_to_url_params(filters)
+def get_active_docket(http_session):
+    next_page = DOCKET_LIST_ENDPOINT \
+                + filters_to_url_params(DOCKET_LIST_FILTERS)
     while next_page:
         response = get_response_json(http_session.get(next_page))
         for docket_entry in response['results']:
