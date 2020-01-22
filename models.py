@@ -215,9 +215,9 @@ class Opinion(_Insertable):
         utils.log('Inserting {}'.format(self))
         sql = """
             INSERT INTO opinions (
-                case_filing_docket_number,
-                opinion_type_id,
-                effective_op_type,
+                docket_number,
+                type_id,
+                effective_type_id,
                 authoring_justice
             )
             VALUES (?, ?, ?, ?);
@@ -239,9 +239,9 @@ class Opinion(_Insertable):
     def _fetch_id(self, cursor):
         sql = """
             SELECT id FROM opinions
-            WHERE case_filing_docket_number = ?
-                AND opinion_type_id = ?
-                AND effective_op_type = ?
+            WHERE docket_number = ?
+                AND type_id = ?
+                AND effective_type_id = ?
                 AND authoring_justice = ?;
         """
         cursor.execute(sql, self._sql_tuple)

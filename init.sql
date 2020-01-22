@@ -51,25 +51,25 @@ CREATE TABLE opinion_types (
 ----- OPINIONS -----
 
 CREATE TABLE opinions (
-    id                          INTEGER         PRIMARY KEY                 AUTOINCREMENT,
-    case_filing_docket_number   VARCHAR(255)                    NOT NULL,
-    opinion_type_id             INTEGER                         NOT NULL,
-    effective_op_type           INTEGER                         NOT NULL,
-    authoring_justice           INTEGER                         NOT NULL,
+    id                  INTEGER         PRIMARY KEY                 AUTOINCREMENT,
+    docket_number       VARCHAR(255)                    NOT NULL,
+    type_id             INTEGER                         NOT NULL,
+    effective_type_id   INTEGER                         NOT NULL,
+    authoring_justice   INTEGER                         NOT NULL,
 
     CONSTRAINT UQ_Opinions
-        UNIQUE (case_filing_docket_number, opinion_type_id, authoring_justice),
+        UNIQUE (docket_number, type_id, authoring_justice),
 
     CONSTRAINT FK_Opinions_CaseFilings
-        FOREIGN KEY (case_filing_docket_number)
+        FOREIGN KEY (docket_number)
         REFERENCES case_filings (docket_number),
 
     CONSTRAINT FK_Opinions_OpinionTypes
-        FOREIGN KEY (opinion_type_id)
+        FOREIGN KEY (type_id)
         REFERENCES opinion_types (id),
 
     CONSTRAINT FK_Opinions_OpinionTypes_effective
-        FOREIGN KEY (effective_op_type)
+        FOREIGN KEY (effective_type_id)
         REFERENCES opinion_types (id),
 
     CONSTRAINT FK_Opinions_Justices
@@ -77,14 +77,14 @@ CREATE TABLE opinions (
         REFERENCES justices (shorthand)
 );
 
-CREATE INDEX IDX_Opinions_CaseFilingDocketNum
-    ON opinions (case_filing_docket_number);
+CREATE INDEX IDX_Opinions_DocketNumber
+    ON opinions (docket_number);
 
-CREATE INDEX IDX_Opinions_OpinionTypeId
-    ON opinions (opinion_type_id);
+CREATE INDEX IDX_Opinions_OpinionType
+    ON opinions (type_id);
 
-CREATE INDEX IDX_Opinions_OpinionTypeId_effective
-    ON opinions (effective_op_type);
+CREATE INDEX IDX_Opinions_EffectiveType
+    ON opinions (effective_type_id);
 
 CREATE INDEX IDX_Opinions_AuthoringJustice
     ON opinions (authoring_justice);

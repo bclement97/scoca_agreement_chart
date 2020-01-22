@@ -55,16 +55,16 @@ def build():
 
     opinion_sql = """
         SELECT
-            case_filing_docket_number docket_num,
+            docket_number,
             o.id opinion_id,
-            effective_op_type type_id,
+            effective_type_id type_id,
             type type_str, -- used for displaying
             authoring_justice author,
             c.justice
         FROM opinions o
-            JOIN opinion_types ot ON effective_op_type = ot.id
+            JOIN opinion_types ot ON effective_type_id = ot.id
             LEFT JOIN concurrences c ON o.id = c.opinion_id
-        ORDER BY docket_num, ot.id, author;
+        ORDER BY docket_number, ot.id, author;
     """
 
     justices = Justice.all()
