@@ -23,6 +23,7 @@ import utils
 def init():
     db_connection = db.connect()
     try:
+        utils.log('Populating table `justices`')
         # Load justices from CSV config file and populate the justice table.
         justices_path = utils.project_path('config', 'justices.csv')
         try:
@@ -34,9 +35,10 @@ def init():
                                       row['fullname'])
                     justice.insert(db_connection)
         except Exception:
-            utils.print_err('Could not populate table `justices`')
+            utils.error('Unable to populate table `justices`')
             raise
         # Populate the opinion type table.
+        utils.log('Populating table `opinion_types`')
         opinion_types_sql = 'INSERT INTO opinion_types (type) VALUES (?);'
         try:
             with db_connection:
@@ -45,7 +47,7 @@ def init():
                     [(str(op_type),) for op_type in list(OpinionType)]
                 )
         except Exception:
-            utils.print_err('Could not populate table `opinion_types`')
+            utils.error('Unable to populate table `opinion_types`')
             raise
     finally:
         db_connection.close()
@@ -57,7 +59,7 @@ def main():
 
     def flag(case_filing, msg):
         flagged_cases.add(case_filing)
-        utils.warn(msg.format(case_filing), stacklevel=2)
+        utils.log(msg.format(case_filing))
 
     http_session = start_http_session()
     try:
@@ -88,9 +90,11 @@ def main():
 
 
 def get_active_docket(http_session):
+    utils.log('Fetching active docket...')
     next_page = DOCKET_LIST_ENDPOINT \
                 + filters_to_url_params(DOCKET_LIST_FILTERS)
     while next_page:
+        utils.log('Fetching ' + next_page)
         response = get_response_json(http_session.get(next_page))
         for docket_entry in response['results']:
             yield CaseFiling(docket_entry, http_session)
@@ -111,7 +115,7 @@ def insert_case(db_connection, case_filing):
                 if opinion.insert(db_connection):
                     inserted_opinions.append(opinion)
     except (apsw.Error, sqlite3.Error) as e:
-        utils.print_err('Could not insert {} - {}'.format(
+        utils.error('Unable to insert {} - {}'.format(
             case_filing.docket_number,
             e
         ))
@@ -158,6 +162,7 @@ def insert_concurrences(db_connection, opinions):
                     )
                     utils.warn(msg)
                 continue
+            utils.log('Adding concurrence: ' + concurring_justice.shorthand)
             concurrences.append((op.id, concurring_justice.shorthand))
     assert len(concurrences), 'There are no concurrences; the majority opinion always has some.'
     try:
@@ -165,7 +170,7 @@ def insert_concurrences(db_connection, opinions):
             db_connection.cursor().executemany(sql, concurrences)
     except (apsw.Error, sqlite3.Error) as e:
         docket_number = opinions[0].case_filing.docket_number
-        utils.print_err('Could not insert concurrences for {} - {}'.format(
+        utils.error('Could not insert concurrences for {} - {}'.format(
             docket_number,
             e
         ))

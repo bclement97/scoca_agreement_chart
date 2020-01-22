@@ -12,6 +12,7 @@ def exists():
 
 
 def init():
+    utils.log('Initializing database')
     init_sql_path = utils.project_path('init.sql')
     db_connection = connect()
     try:
