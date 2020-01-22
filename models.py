@@ -244,7 +244,6 @@ class Opinion(_Insertable):
         cursor.execute(sql, self._sql_tuple)
         # Cache the ID.
         (self.id,) = cursor.fetchone()
-        print(self.id)
         return self.id
 
     def __str__(self):
