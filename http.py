@@ -1,11 +1,14 @@
+from calendar import timegm
+from datetime import datetime
+from email.utils import formatdate, parsedate
 import os
 import urllib
 
 from cachecontrol import CacheControl
 from cachecontrol.caches.file_cache import FileCache
+from cachecontrol.heuristics import BaseHeuristic
 import requests
 
-import cache
 import date
 import utils
 
@@ -41,6 +44,20 @@ OPINION_INSTANCE_FILTERS = {
 }
 
 DEFAULT_REQUESTS_HEADER = {'Accept': 'application/json'}
+
+
+class CacheHeuristic(BaseHeuristic):
+    def update_headers(self, response):
+        response_date = parsedate(response.headers['date'])
+        expires_local = date.next_posting_date(datetime(*response_date[:6]))
+        expires_utc = date.local_to_utc(expires_local)
+        return {
+            'expires': formatdate(timegm(expires_utc.timetuple())),
+            'cache-control': 'public',
+        }
+
+    def warning(self, response):
+        return '110 - "automatically cached, response is stale"'
 
 
 def filters_to_url_params(filter_dict, begin='?'):
@@ -95,7 +112,7 @@ def start_http_session():
     # Cache directory will be created if it doesn't exist.
     cache_path = utils.project_path('.cache')
     http_session = CacheControl(requests.Session(),
-                                heuristic=cache.SCOCAHeuristic(),
+                                heuristic=CacheHeuristic(),
                                 cache=FileCache(cache_path))
     http_session.headers = get_requests_header()
     return http_session
