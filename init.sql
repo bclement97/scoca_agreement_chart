@@ -51,10 +51,10 @@ CREATE TABLE opinion_types (
 ----- OPINIONS -----
 
 CREATE TABLE opinions (
-    id                  INTEGER         PRIMARY KEY                 AUTOINCREMENT,
+    id                  INTEGER         PRIMARY KEY                     AUTOINCREMENT,
     docket_number       VARCHAR(255)                    NOT NULL,
     type_id             INTEGER                         NOT NULL,
-    effective_type_id   INTEGER                         NOT NULL,
+    effective_type_id   INTEGER                         DEFAULT NULL,
     authoring_justice   INTEGER                         NOT NULL,
 
     CONSTRAINT UQ_Opinions
