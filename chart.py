@@ -1,13 +1,12 @@
-import sqlite3
 from time import time
 import yattag
 
 import db
 from .models import Justice, OpinionType
-from .utils import project_path
+import utils
 
 
-_CSS_PATH = project_path('chart.css')
+_CSS_PATH = utils.project_path('chart.css')
 
 
 def build():
@@ -55,16 +54,15 @@ def build():
 
     opinion_sql = """
         SELECT
-            docket_number,
-            o.id opinion_id,
-            effective_type_id type_id,
-            type type_str, -- used for displaying
-            authoring_justice author,
+            o.docket_number,
+            o.id,
+            o.type_id,
+            o.effective_type_id,
+            o.authoring_justice,
             c.justice
         FROM opinions o
-            JOIN opinion_types ot ON effective_type_id = ot.id
             LEFT JOIN concurrences c ON o.id = c.opinion_id
-        ORDER BY docket_number, ot.id, author;
+        ORDER BY docket_number, o.type_id, o.effective_type_id, o.authoring_justice;
     """
 
     justices = Justice.all()
@@ -76,12 +74,12 @@ def build():
     try:
         cur = db_connection.cursor()
         cur.execute(opinion_sql)
-        opinions = cur.fetchall()
+        concurrences = list(cur)
     finally:
         db_connection.close()
 
-    for op in opinions:
-        (docket_num, op_id, type_id, type_str, author, justice) = op
+    for con in concurrences:
+        (docket_num, op_id, type_id, effective_type_id, author, justice) = con
         # When we encounter a new docket number, ensure that it's a
         # majority opinion (by nature of the SQL ordering).
         if majority_op is None or majority_op[0] != docket_num:
@@ -90,34 +88,36 @@ def build():
                 # Encountered a new, non-first case filing.
                 update_chart(count_chart, concurrence)
                 concurrence = create_concurrence_dict(justices)
-            majority_op = op
+            majority_op = (docket_num, author)
 
         if type_id == OpinionType.MAJORITY.value:
             if justice:
                 concurrence_add_concur(author, justice)
         elif type_id == OpinionType.CONCURRING.value:
-            concurrence_add_concur(majority_op[4], author)
+            concurrence_add_concur(majority_op[1], author)
             if justice:
-                concurrence_add_concur(majority_op[4], justice)
+                concurrence_add_concur(majority_op[1], justice)
                 concurrence_add_concur(author, justice)
         elif type_id == OpinionType.DISSENTING.value:
-            concurrence_add_dissent(majority_op[4], author)
+            concurrence_add_dissent(majority_op[1], author)
             if justice:
-                concurrence_add_dissent(majority_op[4], justice)
+                concurrence_add_dissent(majority_op[1], justice)
                 concurrence_add_concur(author, justice)
         else:
             assert type_id == OpinionType.CONCURRING_AND_DISSENTING.value
-            assert False, (
-                "Effective type for Opinion ID#{} incorrectly set " +
-                "to 'Concurring and Dissenting'"
-            ).format(op_id)
+            if effective_type_id is None:
+                msg = "Effective type for CONCURRING AND DISSENTING Opinion" \
+                      " ID#{} is not set".format(op_id)
+                utils.warn(msg)
+                continue
+
 
     update_chart(count_chart, concurrence)
     rate_chart = create_chart(justices)
     for k, counts in count_chart.iteritems():
         rate_chart[k] = round(counts[0] * 100.0 / counts[1], 2)
 
-    filepath = project_path('out', 'agreement_chart_{}.html'.format(int(time())))
+    filepath = utils.project_path('out', 'agreement_chart_{}.html'.format(int(time())))
     with open(filepath, 'w+') as f:
         f.write(generate(rate_chart, justices))
         print('Exported "{}"'.format(filepath))
