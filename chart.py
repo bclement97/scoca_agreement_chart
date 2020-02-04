@@ -10,116 +10,93 @@ _CSS_PATH = utils.project_path('chart.css')
 
 
 def build():
-    def create_chart(justices):
-        """Creates a chart between 7 justices.
+    def concurring_justices(opinion_id):
+        """Returns a set of concurring justice IDs for the given opinion."""
+        sql = 'SELECT justice FROM concurrences WHERE opinion_id = ?'
+        cur = db_connection.cursor()
+        cur.execute(sql, (opinion_id,))
+        return {row[0] for row in cur}
 
-        The keys are frozensets of justice ID pairs so that the ID order
-        doesn't matter. Each pair is set to a default value of a list of two
-        sets, where the first value in the total number of agreements and
-        the second value is the total number of agreements and disagreements."""
-        chart = {}
-        for i, j1 in enumerate(justices):
-            for j2 in justices[i+1:]:
-                key = frozenset([j1.shorthand, j2.shorthand])
-                chart[key] = [0, 0]
-        return chart
-
-    def update_chart(chart, concurrence_dict):
-        for id1 in concurrence_dict:
-            concur_ids, dissent_ids = concurrence[id1]
-            for id2 in concur_ids:
-                # Justices can't concur with themselves.
-                if id1 != id2:
-                    key = frozenset([id1, id2])
-                    chart[key][0] += 1
-                    chart[key][1] += 1
-            for id2 in dissent_ids:
-                # Justices can't dissent with themselves.
-                if id1 != id2:
-                    key = frozenset([id1, id2])
-                    chart[key][1] += 1
-
-    def create_concurrence_dict(justices):
-        return {j.shorthand: [set(), set()] for j in justices}
-
-    def concurrence_add_concur(author_id, justice_id):
-        # Justices can't concur with themselves.
-        if author_id != justice_id:
-            concurrence[author_id][0].add(justice_id)
-
-    def concurrence_add_dissent(author_id, justice_id):
-        # Justices can't dissent with themselves.
-        if author_id != justice_id:
-            concurrence[author_id][1].add(justice_id)
-
-    opinion_sql = """
+    majority_opinions_sql = """
         SELECT
-            o.docket_number,
-            o.id,
-            o.type_id,
-            o.effective_type_id,
-            o.authoring_justice,
-            c.justice
-        FROM opinions o
-            LEFT JOIN concurrences c ON o.id = c.opinion_id
-        ORDER BY docket_number, o.type_id, o.effective_type_id, o.authoring_justice;
+            docket_number,
+            id,
+            authoring_justice
+        FROM opinions
+        WHERE type_id = 1
+        ORDER BY docket_number;
+    """
+    secondary_opinions_sql = """
+        SELECT
+            id,
+            type_id,
+            effective_type_id,
+            authoring_justice
+        FROM opinions
+        WHERE type_id != 1
+            AND docket_number = ?
+        ORDER BY type_id, effective_type_id, authoring_justice;
     """
 
-    justices = Justice.all()
-    count_chart = create_chart(justices)
-    concurrence = create_concurrence_dict(justices)
-    majority_op = None
+    all_justices = Justice.all()
+    count_chart = {}
+    for i, j1 in enumerate(all_justices):
+        for j2 in all_justices[i+1:]:
+            key = frozenset([j1.shorthand, j2.shorthand])
+            count_chart[key] = [0, 0]
 
     db_connection = db.connect()
     try:
-        cur = db_connection.cursor()
-        cur.execute(opinion_sql)
-        concurrences = list(cur)
+        majority_cur = db_connection.cursor()
+        majority_cur.execute(majority_opinions_sql)
+        for docket_num, majority_id, majority_author in majority_cur:
+            concurs = {j.shorthand: set() for j in all_justices}
+            dissents = {j.shorthand: set() for j in all_justices}
+
+            concurs[majority_author] |= concurring_justices(majority_id)
+
+            secondary_cur = db_connection.cursor()
+            secondary_cur.execute(secondary_opinions_sql, (docket_num,))
+            for secondary_id, type_id, effective_type_id, secondary_author in secondary_cur:
+                if type_id == OpinionType.CONCURRING_AND_DISSENTING:
+                    if effective_type_id is None:
+                        msg = "Effective type for CONCURRING AND DISSENTING Opinion" \
+                              " ID#{} is not set".format(secondary_id)
+                        utils.warn(msg)
+                        continue
+                else:
+                    effective_type_id = type_id
+
+                justices = concurring_justices(secondary_id)
+                concurs[secondary_author] |= justices
+                if effective_type_id == OpinionType.CONCURRING:
+                    concurs[majority_author] |= justices | {secondary_author}
+                elif effective_type_id == OpinionType.DISSENTING:
+                    dissents[majority_author] |= justices | {secondary_author}
+                else:
+                    assert False
+
+            for j1 in [j.shorthand for j in all_justices]:
+                for j2 in concurs[j1]:
+                    if j1 == j2:
+                        continue
+                    key = frozenset([j1, j2])
+                    count_chart[key][0] += 1
+                    count_chart[key][1] += 1
+                for j2 in dissents[j1]:
+                    if j1 == j2:
+                        continue
+                    key = frozenset([j1, j2])
+                    count_chart[key][1] += 1
     finally:
         db_connection.close()
 
-    for con in concurrences:
-        (docket_num, op_id, type_id, effective_type_id, author, justice) = con
-        # When we encounter a new docket number, ensure that it's a
-        # majority opinion (by nature of the SQL ordering).
-        if majority_op is None or majority_op[0] != docket_num:
-            assert type_id == OpinionType.MAJORITY.value
-            if majority_op is not None:
-                # Encountered a new, non-first case filing.
-                update_chart(count_chart, concurrence)
-                concurrence = create_concurrence_dict(justices)
-            majority_op = (docket_num, author)
-
-        if type_id == OpinionType.MAJORITY.value:
-            if justice:
-                concurrence_add_concur(author, justice)
-        elif type_id == OpinionType.CONCURRING.value:
-            concurrence_add_concur(majority_op[1], author)
-            if justice:
-                concurrence_add_concur(majority_op[1], justice)
-                concurrence_add_concur(author, justice)
-        elif type_id == OpinionType.DISSENTING.value:
-            concurrence_add_dissent(majority_op[1], author)
-            if justice:
-                concurrence_add_dissent(majority_op[1], justice)
-                concurrence_add_concur(author, justice)
-        else:
-            assert type_id == OpinionType.CONCURRING_AND_DISSENTING.value
-            if effective_type_id is None:
-                msg = "Effective type for CONCURRING AND DISSENTING Opinion" \
-                      " ID#{} is not set".format(op_id)
-                utils.warn(msg)
-                continue
-
-
-    update_chart(count_chart, concurrence)
-    rate_chart = create_chart(justices)
-    for k, counts in count_chart.iteritems():
-        rate_chart[k] = round(counts[0] * 100.0 / counts[1], 2)
+    rate_chart = {k: round(counts[0] * 100.0 / counts[1], 2)
+                  for k, counts in count_chart.iteritems()}
 
     filepath = utils.project_path('out', 'agreement_chart_{}.html'.format(int(time())))
     with open(filepath, 'w+') as f:
-        f.write(generate(rate_chart, justices))
+        f.write(generate(rate_chart, all_justices))
         print('Exported "{}"'.format(filepath))
 
 
