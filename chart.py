@@ -89,9 +89,12 @@ def build():
     finally:
         db_connection.close()
 
-    # TODO: handle possible division by zero
-    rate_chart = {k: round(counts[0] * 100.0 / counts[1], 2)
-                  for k, counts in count_chart.iteritems()}
+    rate_chart = {}
+    for key, counts in count_chart.iteritems():
+        try:
+            rate_chart[key] = round(counts[0] * 100.0 / counts[1], 2)
+        except ZeroDivisionError:
+            rate_chart[key] = -1
 
     filepath = utils.project_path('out', 'agreement_chart_{}.html'.format(int(time())))
     with open(filepath, 'w+') as f:
