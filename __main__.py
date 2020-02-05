@@ -36,8 +36,8 @@ def init():
                     try:
                         justice.insert(db_connection)
                     except apsw.ConstraintError as e:
-                        msg = 'Unable to insert {}: {}'.format(justice, e)
-                        utils.warn(msg)
+                        msg = 'Unable to insert {}: {}'
+                        utils.warn(msg.format(justice, e))
         except Exception:
             utils.error('Unable to populate table `justices`')
             raise
@@ -50,6 +50,9 @@ def init():
                     opinion_types_sql,
                     [(str(op_type),) for op_type in list(OpinionType)]
                 )
+        except apsw.ConstraintError as e:
+            msg = 'Unable to populate table `opinion_types`: {}'
+            utils.warn(msg.format(e))
         except Exception:
             utils.error('Unable to populate table `opinion_types`')
             raise
