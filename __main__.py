@@ -26,36 +26,29 @@ def init():
         utils.log('Populating table `justices`')
         # Load justices from CSV config file and populate the justice table.
         justices_path = utils.project_path('config', 'justices.csv')
-        try:
-            with db_connection, open(justices_path, 'rb') as justices_csv:
-                justices_reader = csv.DictReader(justices_csv)
-                # TODO: change?
-                for row in justices_reader:
-                    justice = Justice(row['shorthand'], row['short_name'],
-                                      row['fullname'])
-                    try:
-                        justice.insert(db_connection)
-                    except apsw.ConstraintError as e:
-                        msg = 'Unable to insert {}: {}'
-                        utils.warn(msg, justice, e)
-        except Exception as e:
-            utils.error(e, 'Unable to populate table `justices`')
-            raise
+        with db_connection, open(justices_path, 'rb') as justices_csv:
+            justices_reader = csv.DictReader(justices_csv)
+            # TODO: change?
+            for row in justices_reader:
+                justice = Justice(row['shorthand'], row['short_name'],
+                                  row['fullname'])
+                try:
+                    justice.insert(db_connection)
+                except apsw.ConstraintError as e:
+                    msg = 'Unable to insert {}: {}'
+                    utils.warn(msg, justice, e)
         # Populate the opinion type table.
         utils.log('Populating table `opinion_types`')
         opinion_types_sql = 'INSERT INTO opinion_types (type) VALUES (?);'
-        try:
-            with db_connection:
+        with db_connection:
+            try:
                 db_connection.cursor().executemany(
                     opinion_types_sql,
                     [(str(op_type),) for op_type in list(OpinionType)]
                 )
-        except apsw.ConstraintError as e:
-            msg = 'Unable to populate table `opinion_types`: {}'
-            utils.warn(msg, e)
-        except Exception as e:
-            utils.error(e, 'Unable to populate table `opinion_types`')
-            raise
+            except apsw.ConstraintError as e:
+                msg = 'Unable to populate table `opinion_types`: {}'
+                utils.warn(msg, e)
     finally:
         db_connection.close()
 
