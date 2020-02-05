@@ -155,12 +155,14 @@ def insert_concurrences(db_connection, opinions):
                     msg = "Encountered unknown concurring justice '{}' in {}"
                     utils.warn(msg, concurring_justice_name, repr(op))
                 continue
-            utils.log('Adding concurrence: {}', concurring_justice.shorthand)
             concurrences.append((op.id, concurring_justice.shorthand))
     assert len(concurrences), 'There are no concurrences; the majority opinion always has some.'
+    utils.log('Inserting concurrences: {}', ', '.join(c[1] for c in concurrences))
     try:
         with db_connection:
             db_connection.cursor().executemany(sql, concurrences)
+    except apsw.ConstraintError as e:
+        utils.warn(str(e))
     except (apsw.Error, sqlite3.Error) as e:
         msg = 'Could not insert concurrences for {}: {}'
         docket_number = opinions[0].case_filing.docket_number
