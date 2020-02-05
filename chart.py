@@ -11,7 +11,7 @@ _CSS_PATH = utils.project_path('chart.css')
 
 def build():
     def concurring_justices(opinion_id):
-        """Returns a set of concurring justice IDs for the given opinion."""
+        """Returns a set of concurring justice IDs for the given OPINION_ID."""
         sql = 'SELECT justice FROM concurrences WHERE opinion_id = ?'
         cur = db_connection.cursor()
         cur.execute(sql, (opinion_id,))
@@ -39,6 +39,9 @@ def build():
     """
 
     all_justices = Justice.all()
+    # We keep a list of two ints for each pair of justices representing,
+    # respectively, the number of times they concur and the total number
+    # of times they concur or dissent.
     count_chart = {}
     for i, j1 in enumerate(all_justices):
         for j2 in all_justices[i+1:]:
@@ -77,20 +80,19 @@ def build():
                     assert False
 
             for j1 in [j.shorthand for j in all_justices]:
-                for j2 in concurs[j1]:
-                    if j1 == j2:
-                        continue
+                # Justices can't concur with/dissent from themselves,
+                # so we don't include them if they're in the sets.
+                for j2 in concurs[j1] - {j1}:
                     key = frozenset([j1, j2])
                     count_chart[key][0] += 1
                     count_chart[key][1] += 1
-                for j2 in dissents[j1]:
-                    if j1 == j2:
-                        continue
+                for j2 in dissents[j1] - {j1}:
                     key = frozenset([j1, j2])
                     count_chart[key][1] += 1
     finally:
         db_connection.close()
 
+    # TODO: handle possible division by zero
     rate_chart = {k: round(counts[0] * 100.0 / counts[1], 2)
                   for k, counts in count_chart.iteritems()}
 
