@@ -28,6 +28,10 @@
   background-color: #b1efb1;
 }
 
+.error {
+  background-color: #daa520;
+}
+
 #legendTable {
   border: none;
   border-collapse: collapse;

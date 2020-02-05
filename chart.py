@@ -127,11 +127,15 @@ def generate(chart, justices, indent=False):
                     key = frozenset([j_left.shorthand, j_top.shorthand])
                     rate = int(round(chart[key]))
                     with tag('td'):
-                        if rate > 90:
-                            doc.attr(klass='high')
-                        elif rate < 10:
-                            doc.attr(klass='low')
-                        text('{}%'.format(rate))
+                        if rate == -1:
+                            doc.attr(klass='error')
+                            text('&#9473;')
+                        else:
+                            if rate > 90:
+                                doc.attr(klass='high')
+                            elif rate < 10:
+                                doc.attr(klass='low')
+                            text('{}%'.format(rate))
 
     with tag('table', id='legendTable'):
         for j in justices:
