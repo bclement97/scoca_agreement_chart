@@ -152,8 +152,8 @@ def insert_concurrences(db_connection, opinions):
                     op.concurring_justices.extend(justice_names)
                 if unknown_name:
                     # Part or all of the unknown name remains
-                    msg = "Encountered unknown concurring justice '{}' in {}"
-                    utils.warn(msg, concurring_justice_name, repr(op))
+                    msg = "Unknown concurring justice '{}'"
+                    utils.warn(msg, concurring_justice_name)
                 continue
             concurrences.append((op.id, concurring_justice.shorthand))
     assert len(concurrences), 'There are no concurrences; the majority opinion always has some.'

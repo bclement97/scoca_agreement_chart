@@ -198,6 +198,7 @@ class Opinion(_Insertable):
         self.case_filing = case_filing
         self.authoring_justice = authoring_justice
         # Put concurring justices (chief and assoc.) into a list
+        # TODO: convert these to Justice objects
         self.concurring_justices = regex.split_justices(concurring_assocs)
         if concurring_chief:
             self.concurring_justices += [concurring_chief]
