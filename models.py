@@ -52,7 +52,7 @@ class Justice(_Insertable):
         return Justice._all_by_short_name.keys()
 
     def insert(self, db_connection):
-        utils.log('Inserting {} ({})'.format(self.fullname, self.shorthand))
+        utils.log('Inserting {}'.format(self))
         sql = """
             INSERT INTO justices (
                 shorthand,
@@ -67,6 +67,9 @@ class Justice(_Insertable):
             self.short_name,
             self.fullname
         ))
+
+    def __str__(self):
+        return '{} ({})'.format(self.fullname, self.shorthand)
 
 
 class CaseFiling(_Insertable):

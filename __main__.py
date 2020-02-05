@@ -33,7 +33,11 @@ def init():
                 for row in justices_reader:
                     justice = Justice(row['shorthand'], row['short_name'],
                                       row['fullname'])
-                    justice.insert(db_connection)
+                    try:
+                        justice.insert(db_connection)
+                    except apsw.ConstraintError as e:
+                        msg = 'Unable to insert {}: {}'.format(justice, e)
+                        utils.warn(msg)
         except Exception:
             utils.error('Unable to populate table `justices`')
             raise
