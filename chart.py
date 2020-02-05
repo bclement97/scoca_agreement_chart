@@ -92,7 +92,7 @@ def build():
     rate_chart = {}
     for key, counts in count_chart.iteritems():
         try:
-            rate_chart[key] = round(counts[0] * 100.0 / counts[1], 2)
+            rate_chart[key] = counts[0] * 100.0 / counts[1]
         except ZeroDivisionError:
             rate_chart[key] = -1
 
