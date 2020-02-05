@@ -1,5 +1,6 @@
 from enum import Enum, unique
 
+import apsw
 import requests
 
 from .http import (
@@ -18,6 +19,17 @@ def _assert_unit_list(obj):
 class _Insertable(object):
     def insert(self, db_connection):
         raise NotImplementedError
+
+    def _insert(self, db_connection, sql, bindings):
+        utils.log('Inserting {}', self)
+        cur = db_connection.cursor()
+        try:
+            cur.execute(sql, bindings)
+        except apsw.ConstraintError as e:
+            # Usually, this means it already exists in the database, so
+            # just raise a warning just in case.
+            utils.warn(str(e))
+        return cur
 
 
 class Justice(_Insertable):
@@ -52,7 +64,6 @@ class Justice(_Insertable):
         return Justice._all_by_short_name.keys()
 
     def insert(self, db_connection):
-        utils.log('Inserting {}', self)
         sql = """
             INSERT INTO justices (
                 shorthand,
@@ -61,8 +72,7 @@ class Justice(_Insertable):
             )
             VALUES (?, ?, ?); 
         """
-        db_connection.cursor().execute(sql, (
-            # Sqlite3 requires unicode.
+        self._insert(db_connection, sql, (
             self.shorthand,
             self.short_name,
             self.fullname
@@ -107,7 +117,6 @@ class CaseFiling(_Insertable):
         return self._opinion_cluster.get('date_filed')
 
     def insert(self, db_connection):
-        utils.log('Inserting {}', self)
         sql = """
             INSERT INTO case_filings (
                 docket_number,
@@ -118,7 +127,7 @@ class CaseFiling(_Insertable):
             )
             VALUES (?, ?, ?, ?, ?);
         """
-        db_connection.cursor().execute(sql, (
+        self._insert(db_connection, sql, (
             self.docket_number,
             self.url,
             self.plain_text,
@@ -219,7 +228,6 @@ class Opinion(_Insertable):
             return None
 
     def insert(self, db_connection):
-        utils.log('Inserting {}', self)
         sql = """
             INSERT INTO opinions (
                 docket_number,
@@ -232,8 +240,7 @@ class Opinion(_Insertable):
             msg = "Encountered unknown authoring justice '{}' in {}"
             utils.warn(msg, self.authoring_justice, repr(self))
             return False
-        cur = db_connection.cursor()
-        cur.execute(sql, self._sql_tuple)
+        cur = self._insert(db_connection, sql, self._sql_tuple)
         self._fetch_id(cur)
         return True
 
