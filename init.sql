@@ -113,3 +113,15 @@ CREATE INDEX IDX_Concurrences_OpinionId
 
 CREATE INDEX IDX_Concurrences_Justice
     ON concurrences (justice);
+
+----- VIEWS -----
+
+CREATE VIEW majority_opinions
+AS
+    SELECT * FROM opinions WHERE type_id = 1 ORDER BY docket_number
+;
+
+CREATE VIEW secondary_opinions
+AS
+    SELECT * FROM opinions WHERE type_id != 1 ORDER BY docket_number
+;

@@ -22,9 +22,7 @@ def build():
             docket_number,
             id,
             authoring_justice
-        FROM opinions
-        WHERE type_id = 1
-        ORDER BY docket_number;
+        FROM majority_opinions;
     """
     secondary_opinions_sql = """
         SELECT
@@ -32,9 +30,8 @@ def build():
             type_id,
             effective_type_id,
             authoring_justice
-        FROM opinions
-        WHERE type_id != 1
-            AND docket_number = ?
+        FROM secondary_opinions
+        WHERE docket_number = ?
         ORDER BY type_id, effective_type_id, authoring_justice;
     """
 
