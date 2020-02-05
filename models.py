@@ -52,7 +52,7 @@ class Justice(_Insertable):
         return Justice._all_by_short_name.keys()
 
     def insert(self, db_connection):
-        utils.log('Inserting {}'.format(self))
+        utils.log('Inserting {}', self)
         sql = """
             INSERT INTO justices (
                 shorthand,
@@ -107,7 +107,7 @@ class CaseFiling(_Insertable):
         return self._opinion_cluster.get('date_filed')
 
     def insert(self, db_connection):
-        utils.log('Inserting {}'.format(self))
+        utils.log('Inserting {}', self)
         sql = """
             INSERT INTO case_filings (
                 docket_number,
@@ -219,7 +219,7 @@ class Opinion(_Insertable):
             return None
 
     def insert(self, db_connection):
-        utils.log('Inserting {}'.format(self))
+        utils.log('Inserting {}', self)
         sql = """
             INSERT INTO opinions (
                 docket_number,
@@ -229,13 +229,8 @@ class Opinion(_Insertable):
             VALUES (?, ?, ?);
         """
         if self._sql_tuple is None:
-            msg = (
-                "Encountered unknown authoring justice '{}' in {}".format(
-                    self.authoring_justice,
-                    repr(self)
-                )
-            )
-            utils.warn(msg)
+            msg = "Encountered unknown authoring justice '{}' in {}"
+            utils.warn(msg, self.authoring_justice, repr(self))
             return False
         cur = db_connection.cursor()
         cur.execute(sql, self._sql_tuple)

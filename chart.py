@@ -60,9 +60,9 @@ def build():
             for secondary_id, type_id, effective_type_id, secondary_author in secondary_cur:
                 if type_id == OpinionType.CONCURRING_AND_DISSENTING:
                     if effective_type_id is None:
-                        msg = "Effective type for CONCURRING AND DISSENTING Opinion" \
-                              " ID#{} is not set".format(secondary_id)
-                        utils.warn(msg)
+                        msg = "Effective type for CONCURRING AND DISSENTING" \
+                              " Opinion ID#{} is not set"
+                        utils.warn(msg, secondary_id)
                         continue
                 else:
                     effective_type_id = type_id
