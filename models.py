@@ -1,4 +1,5 @@
 from enum import Enum, unique
+import string
 
 import apsw
 import requests
@@ -116,6 +117,14 @@ class CaseFiling(_Insertable):
     def filed_on(self):
         return self._opinion_cluster.get('date_filed')
 
+    @property
+    def is_supplemental(self):
+        return self.docket_number[-1] in string.ascii_letters
+
+    @property
+    def has_no_opinions(self):
+        return not len(self.opinions)
+
     def insert(self, db_connection):
         sql = """
             INSERT INTO case_filings (
@@ -123,16 +132,20 @@ class CaseFiling(_Insertable):
                 url,
                 plain_text,
                 sha1,
-                filed_on
+                filed_on,
+                supplemental_flag,
+                no_opinions_flag
             )
-            VALUES (?, ?, ?, ?, ?);
+            VALUES (?, ?, ?, ?, ?, ?, ?);
         """
         self._insert(db_connection, sql, (
             self.docket_number,
             self.url,
             self.plain_text,
             self.sha1,
-            self.filed_on
+            self.filed_on,
+            self.is_supplemental,
+            self.has_no_opinions
         ))
 
     def __get(self, endpoint, filter_dict):

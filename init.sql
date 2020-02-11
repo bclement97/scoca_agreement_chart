@@ -11,21 +11,24 @@ CREATE TABLE justices (
 ----- CASE FILINGS -----
 
 CREATE TABLE case_filings (
-    docket_number   VARCHAR(255)    PRIMARY KEY,
-    url             VARCHAR(255)                    NOT NULL,
-    plain_text      CLOB                            NOT NULL,
+    docket_number       VARCHAR(255)    PRIMARY KEY,
+    url                 VARCHAR(255)                    NOT NULL,
+    plain_text          CLOB                            NOT NULL,
 -- TODO: Use to check for updates?
-    sha1            VARCHAR(255)                    NOT NULL,
+    sha1                VARCHAR(255)                    NOT NULL,
 -- When the filing was officially filed.
-    filed_on        DATE                            NOT NULL,
+    filed_on            DATE                            NOT NULL,
 -- When the filing was added locally.
-    added_on        TIMESTAMP                       NOT NULL    DEFAULT CURRENT_TIMESTAMP,
+    added_on            TIMESTAMP                       NOT NULL    DEFAULT CURRENT_TIMESTAMP,
 -- When official changes were last made made to the filing.
-    modified_on     DATE                                        DEFAULT NULL,
+    modified_on         DATE                                        DEFAULT NULL,
 -- When changes were last made locally.
-    updated_on      TIMESTAMP                                   DEFAULT NULL,
-    reviewer        VARCHAR(255)                                DEFAULT NULL,
-    reviewed_on     TIMESTAMP                                   DEFAULT NULL
+    updated_on          TIMESTAMP                                   DEFAULT NULL,
+    reviewer            VARCHAR(255)                                DEFAULT NULL,
+    reviewed_on         TIMESTAMP                                   DEFAULT NULL,
+-- Flags
+    supplemental_flag   INTEGER                                     DEFAULT 0,
+    no_opinions_flag    INTEGER                                     DEFAULT 0
 );
 
 CREATE INDEX IDX_CaseFilings_PublishedOn
@@ -56,6 +59,9 @@ CREATE TABLE opinions (
     type_id             INTEGER                         NOT NULL,
     effective_type_id   INTEGER                         DEFAULT NULL,
     authoring_justice   INTEGER                         NOT NULL,
+-- Flags
+    unknown_author_flag INTEGER                         DEFAULT 0,
+    unknown_concur_flag INTEGER                         DEFAULT 0,
 
     CONSTRAINT UQ_Opinions
         UNIQUE (docket_number, type_id, authoring_justice),

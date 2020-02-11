@@ -4,7 +4,6 @@ from __future__ import print_function
 import apsw
 import unicodecsv as csv  # This helps fix unicode issues.
 import sqlite3
-import string
 import sys
 
 # import click as cli
@@ -69,7 +68,7 @@ def main():
                 # CaseFilings whose docket numbers end in a letter. Only 'A'
                 # and 'M' are known to occur, but others should be flagged
                 # regardless.
-                if case_filing.docket_number[-1] in string.ascii_letters:
+                if case_filing.is_supplemental:
                     # TODO: Ignore flagged case filings for now.
                     flag(case_filing, 'Ignoring {}')
                     continue
