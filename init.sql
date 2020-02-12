@@ -54,14 +54,16 @@ CREATE TABLE opinion_types (
 ----- OPINIONS -----
 
 CREATE TABLE opinions (
-    id                  INTEGER         PRIMARY KEY                     AUTOINCREMENT,
-    docket_number       VARCHAR(255)                    NOT NULL,
-    type_id             INTEGER                         NOT NULL,
-    effective_type_id   INTEGER                         DEFAULT NULL,
-    authoring_justice   INTEGER                         NOT NULL,
+    id                      INTEGER         PRIMARY KEY     AUTOINCREMENT,
+    docket_number           VARCHAR(255)    NOT NULL,
+    type_id                 INTEGER         NOT NULL,
+    effective_type_id       INTEGER                         DEFAULT NULL,
+    authoring_justice       INTEGER         NOT NULL,
 -- Flags
-    unknown_author_flag INTEGER                         DEFAULT 0,
-    unknown_concur_flag INTEGER                         DEFAULT 0,
+    unknown_author_flag     INTEGER         NOT NULL        DEFAULT 0,
+    unknown_concur_flag     INTEGER         NOT NULL        DEFAULT 0,
+    no_concurrences_flag    INTEGER         NOT NULL        DEFAULT 0,
+    effective_type_flag     INTEGER         NOT NULL        DEFAULT 0,
 
     CONSTRAINT UQ_Opinions
         UNIQUE (docket_number, type_id, authoring_justice),

@@ -236,6 +236,15 @@ class Opinion(_Insertable):
         self.id = None
 
     @property
+    def has_no_concurrences(self):
+        return not len(self.concurring_justices)
+
+    @property
+    def needs_effective_type(self):
+        return self.type == OpinionType.CONCURRING_AND_DISSENTING \
+               and self.effective_type is None
+
+    @property
     def _sql_tuple(self):
         """Returns a tuple uniquely identifying this opinion to use in
          sql queries.
@@ -258,15 +267,18 @@ class Opinion(_Insertable):
             INSERT INTO opinions (
                 docket_number,
                 type_id,
-                authoring_justice
+                authoring_justice,
+                no_concurrences_flag,
+                effective_type_flag
             )
-            VALUES (?, ?, ?);
+            VALUES (?, ?, ?, ?, ?);
         """
         if self._sql_tuple is None:
             msg = "Encountered unknown authoring justice '{}' in {}"
             utils.warn(msg, self.authoring_justice, repr(self))
             return False
-        cur = self._insert(db_connection, sql, self._sql_tuple)
+        tup = self._sql_tuple + (self.has_no_concurrences, self.needs_effective_type)
+        cur = self._insert(db_connection, sql, tup)
         self._fetch_id(cur)
         return True
 
