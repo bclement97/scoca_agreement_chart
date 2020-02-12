@@ -17,12 +17,28 @@ def build():
         cur.execute(sql, (opinion_id,))
         return {row[0] for row in cur}
 
+    def ignored_case_filings_warning():
+        """Remove this function and it's usage below once this has been
+        given a solution.
+        """
+        sql = 'SELECT COUNT(*) FROM docket_numbers_end_in_letter'
+        cur = db_connection.cursor()
+        cur.execute(sql)
+        utils.warn(
+            '{} Case Filings whose docket numbers end in a letter are being ignored',
+            cur.fetchone()[0]
+        )
+
     majority_opinions_sql = """
         SELECT
             docket_number,
             id,
             authoring_justice
-        FROM majority_opinions;
+        FROM majority_opinions
+        WHERE docket_number NOT IN (
+            SELECT *
+            FROM docket_numbers_end_in_letter
+        );
     """
     secondary_opinions_sql = """
         SELECT
@@ -47,6 +63,9 @@ def build():
 
     db_connection = db.connect()
     try:
+        # TODO: Remove this call when a solution is found.
+        ignored_case_filings_warning()
+
         majority_cur = db_connection.cursor()
         majority_cur.execute(majority_opinions_sql)
         for docket_num, majority_id, majority_author in majority_cur:

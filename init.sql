@@ -131,3 +131,8 @@ CREATE VIEW secondary_opinions
 AS
     SELECT * FROM opinions WHERE type_id != 1 ORDER BY docket_number
 ;
+
+CREATE VIEW docket_numbers_end_in_letter
+AS
+    SELECT docket_number FROM case_filings WHERE ends_in_letter_flag = 1
+;
