@@ -27,7 +27,7 @@ CREATE TABLE case_filings (
     reviewer            VARCHAR(255)                                DEFAULT NULL,
     reviewed_on         TIMESTAMP                                   DEFAULT NULL,
 -- Flags
-    supplemental_flag   INTEGER                                     DEFAULT 0,
+    ends_in_letter_flag INTEGER                                     DEFAULT 0,
     no_opinions_flag    INTEGER                                     DEFAULT 0
 );
 

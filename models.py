@@ -118,7 +118,7 @@ class CaseFiling(_Insertable):
         return self._opinion_cluster.get('date_filed')
 
     @property
-    def is_supplemental(self):
+    def ends_in_letter(self):
         return self.docket_number[-1] in string.ascii_letters
 
     @property
@@ -133,7 +133,7 @@ class CaseFiling(_Insertable):
                 plain_text,
                 sha1,
                 filed_on,
-                supplemental_flag,
+                ends_in_letter_flag,
                 no_opinions_flag
             )
             VALUES (?, ?, ?, ?, ?, ?, ?);
@@ -144,7 +144,7 @@ class CaseFiling(_Insertable):
             self.plain_text,
             self.sha1,
             self.filed_on,
-            self.is_supplemental,
+            self.ends_in_letter,
             self.has_no_opinions
         ))
 

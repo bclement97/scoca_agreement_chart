@@ -68,7 +68,7 @@ def main():
                 # CaseFilings whose docket numbers end in a letter. Only 'A'
                 # and 'M' are known to occur, but others should be flagged
                 # regardless.
-                if case_filing.is_supplemental:
+                if case_filing.ends_in_letter:
                     # TODO: Ignore flagged case filings for now.
                     flag(case_filing, 'Ignoring {}')
                     continue
