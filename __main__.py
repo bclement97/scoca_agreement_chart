@@ -65,14 +65,6 @@ def main():
         db_connection = db.connect()
         try:
             for case_filing in get_active_docket(http_session):
-                # CaseFilings whose docket numbers end in a letter. Only 'A'
-                # and 'M' are known to occur, but others should be flagged
-                # regardless.
-                if case_filing.ends_in_letter:
-                    # TODO: Ignore flagged case filings for now.
-                    flag(case_filing, 'Ignoring {}')
-                    continue
-
                 inserted_opinions = insert_case(db_connection, case_filing)
                 if inserted_opinions is None:
                     # Case filing was not inserted.

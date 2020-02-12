@@ -33,6 +33,11 @@ class _Insertable(object):
         return cur
 
 
+class _Flagable(object):
+    def flag(self, msg):
+        utils.log('FLAGGED {}: {}', str(self), msg)
+
+
 class Justice(_Insertable):
     _all = []
     _all_by_shorthand = dict()
@@ -83,7 +88,7 @@ class Justice(_Insertable):
         return '{} ({})'.format(self.fullname, self.shorthand)
 
 
-class CaseFiling(_Insertable):
+class CaseFiling(_Insertable, _Flagable):
     def __init__(self, docket_entry, http_session=requests):
         self.opinions = []
 
@@ -147,6 +152,13 @@ class CaseFiling(_Insertable):
             self.ends_in_letter,
             self.has_no_opinions
         ))
+        if self.ends_in_letter:
+            # CaseFilings whose docket numbers end in a letter. Only 'A'
+            # and 'M' are known to occur, but others should be flagged
+            # regardless.
+            self.flag('Docket number ends in a letter')
+        if self.has_no_opinions:
+            self.flag('Has no opinions')
 
     def __get(self, endpoint, filter_dict):
         filtered_endpoint = endpoint + filters_to_url_params(filter_dict)
