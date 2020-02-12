@@ -66,13 +66,7 @@ def main():
         try:
             for case_filing in get_active_docket(http_session):
                 inserted_opinions = insert_case(db_connection, case_filing)
-                if inserted_opinions is None:
-                    # Case filing was not inserted.
-                    continue
-
-                if not len(inserted_opinions):
-                    flag(case_filing, '{} has no opinions')
-                else:
+                if inserted_opinions is not None and len(inserted_opinions):
                     insert_concurrences(db_connection, inserted_opinions)
         finally:
             db_connection.close()
