@@ -4,7 +4,7 @@ import os.path
 import utils
 
 
-_DB_PATH = utils.project_path('.db')
+_DB_PATH = utils.project_path('..', '.db')
 
 
 def exists():
