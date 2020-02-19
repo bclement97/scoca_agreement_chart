@@ -9,14 +9,14 @@ require_once 'db.php';
  * - S######M:  no_opinions_flag = 1 AND ends_in_letter_flag = 1
  * - S######A:  no_opinions_flag = 0 AND ends_in_letter_flag = 0
  */
-$flagged_case_filings = $db->query(<<<SQL
+$flagged_case_filings = $db->query(<<<'SQL'
 SELECT docket_number, url, sha1, filed_on, added_on, no_opinions_flag, ends_in_letter_flag
 FROM case_filings 
 WHERE ends_in_letter_flag = 1 OR no_opinions_flag = 1
 ORDER BY no_opinions_flag DESC, ends_in_letter_flag, filed_on, added_on
 SQL
 );
-$flagged_opinions = $db->query(<<<SQL
+$flagged_opinions = $db->query(<<<'SQL'
 SELECT id, docket_number, type_id, effective_type_id, authoring_justice, effective_type_flag, no_concurrences_flag
 FROM opinions
 WHERE no_concurrences_flag = 1 OR effective_type_flag = 1
