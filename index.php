@@ -25,6 +25,18 @@ SQL
 );
 ?>
 
+<style>
+table {
+    border-collapse: collapse;
+}
+table, th, td {
+    border: 1px solid black;
+}
+th, td {
+    padding: 5px;
+}
+</style>
+
 <h1>SCOCA Agreement Chart Admin Interface</h1>
 
 <h2>Flagged Case Filings</h2>
