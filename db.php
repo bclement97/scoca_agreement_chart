@@ -10,7 +10,7 @@ function row_count(SQLite3Result $result) {
     return $count;
 }
 
-function tabularize_result(SQLite3Result $result) {
+function result_to_table(SQLite3Result $result) {
     $table = '<table><thead>';
     for ($i = 0; $i < $result->numColumns(); ++$i) {
         $col_name = $result->columnName($i);

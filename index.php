@@ -30,7 +30,7 @@ SQL
 <h2>Flagged Case Filings</h2>
 <?php
 if (row_count($flagged_case_filings)) {
-    echo tabularize_result($flagged_case_filings);
+    echo result_to_table($flagged_case_filings);
 } else {
     echo '<p>No flagged case filings.</p>';
 }
@@ -39,7 +39,7 @@ if (row_count($flagged_case_filings)) {
 <h2>Flagged Opinions</h2>
 <?php
 if (row_count($flagged_opinions)) {
-    echo tabularize_result($flagged_opinions);
+    echo result_to_table($flagged_opinions);
 } else {
     echo '<p>No flagged opinions.</p>';
 }
