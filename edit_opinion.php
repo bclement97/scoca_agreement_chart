@@ -22,8 +22,8 @@ function get_concurrences(SQLite3 $db, $opinion_id) {
     $stmt->bindValue(':id', $opinion_id);
     $result = $stmt->execute();
     $justices = array();
-    while ($row = $result->fetchArray(SQLITE3_NUM)) {
-        $justices[] = $row[0];
+    while ($row = $result->fetchArray(SQLITE3_ASSOC)) {
+        $justices[] = $row['justice'];
     }
     return $justices;
 }
@@ -119,7 +119,7 @@ $opinion = get_opinion($db, $id);
     <div>
         CONCURRING JUSTICE(S):
         <?=array_to_select($justices, 'concurring_justices', $opinion['concurring_justices'], true)?>
-        (if selected, authoring justice will be ignored)
+        (if AUTHORING JUSTICE is selected, it will be ignored)
     </div>
     <div>
         <input type="submit" value="Submit" />
