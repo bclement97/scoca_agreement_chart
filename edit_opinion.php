@@ -46,6 +46,32 @@ function get_opinion_types(SQLite3 $db) {
     return $opinion_types;
 }
 
+function update_opinion(SQLite3 $db, $post) {
+    $sql = 'UPDATE opinions SET
+                type_id = :type_id,
+                effective_type_id = :effective_type_id,
+                authoring_justice = :authoring_justice';
+    if (isset($post['effective_type_flag'])) {
+        $sql .= ', effective_type_flag = :effective_type_flag';
+    }
+    if (isset($post['no_concurrences_flag'])) {
+        $sql .= ', no_concurrences_flag = :no_concurrences_flag';
+    }
+    $sql .= ' WHERE id = :id';
+    $stmt = $db->prepare($sql);
+    $stmt->bindValue(':type_id', $post['type_id']);
+    $stmt->bindValue(':effective_type_id', $post['effective_type_id']);
+    $stmt->bindValue(':authoring_justice', $post['authoring_justice']);
+    if (isset($post['effective_type_flag'])) {
+        $stmt->bindValue(':effective_type_flag', $post['effective_type_flag']);
+    }
+    if (isset($post['no_concurrences_flag'])) {
+        $stmt->bindValue(':no_concurrences_flag', $post['no_concurrences_flag']);
+    }
+    $stmt->bindValue(':id', $post['id']);
+    return $stmt->execute();
+}
+
 function array_to_select($arr, $name, $selected = null, $multi = false) {
     assert(is_array($selected) === $multi);
 
@@ -78,8 +104,16 @@ if (isset($_GET['id'])) {
 }
 
 if (isset($_POST['id'])) {
-    // TODO
-    print_r($_POST);
+    if (!isset($_POST['type_id'], $_POST['effective_type_id'], $_POST['authoring_justice'])) {
+        echo '<p>ERROR: Could not update, a required field is missing</p><pre>';
+        print_r($_POST);
+        echo '</pre>';
+    }
+    $prev_concurrences = get_concurrences($db, $_POST['id']);
+    $db->exec('BEGIN');
+    update_opinion($db, $_POST);
+    // TODO: update concurrences
+    $db->exec('COMMIT');
 }
 
 $justices = get_justices($db);
