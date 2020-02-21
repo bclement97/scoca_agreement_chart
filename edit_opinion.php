@@ -58,7 +58,9 @@ function update_opinion(SQLite3 $db, $post) {
         $sql .= ', no_concurrences_flag = :no_concurrences_flag';
     }
     $sql .= ' WHERE id = :id';
+
     $stmt = $db->prepare($sql);
+
     $stmt->bindValue(':type_id', $post['type_id']);
     $stmt->bindValue(':effective_type_id', $post['effective_type_id']);
     $stmt->bindValue(':authoring_justice', $post['authoring_justice']);
@@ -69,7 +71,34 @@ function update_opinion(SQLite3 $db, $post) {
         $stmt->bindValue(':no_concurrences_flag', $post['no_concurrences_flag']);
     }
     $stmt->bindValue(':id', $post['id']);
-    return $stmt->execute();
+
+    $stmt->execute();
+}
+
+
+function update_concurrences(SQLite3 $db, $opinion_id, $new_justices, $old_justices) {
+    sort($new_justices);
+    sort($old_justices);
+    if ($new_justices === $old_justices) {
+        // Nothing to update.
+        return;
+    }
+
+    $delete_stmt = $db->prepare('DELETE FROM concurrences WHERE opinion_id = :id AND justice = :justice');
+    foreach (array_diff($old_justices, $new_justices) as $justice) {
+        $delete_stmt->bindValue(':id', $opinion_id);
+        $delete_stmt->bindValue(':justice', $justice);
+        $delete_stmt->execute();
+        $delete_stmt->reset();
+    }
+
+    $insert_stmt = $db->prepare('INSERT INTO concurrences (opinion_id, justice) VALUES (:id, :justice)');
+    foreach (array_diff($new_justices, $old_justices) as $justice) {
+        $insert_stmt->bindValue(':id', $opinion_id);
+        $insert_stmt->bindValue(':justice', $justice);
+        $insert_stmt->execute();
+        $insert_stmt->reset();
+    }
 }
 
 function array_to_select($arr, $name, $selected = null, $multi = false) {
@@ -104,16 +133,21 @@ if (isset($_GET['id'])) {
 }
 
 if (isset($_POST['id'])) {
-    if (!isset($_POST['type_id'], $_POST['effective_type_id'], $_POST['authoring_justice'])) {
+    if ($_POST['id'] !== $id) {
+        echo '<p>ERROR: IDs provided by GET and POST do not match.</p>';
+    } else if (!isset($_POST['type_id'], $_POST['effective_type_id'], $_POST['authoring_justice'])) {
         echo '<p>ERROR: Could not update, a required field is missing</p><pre>';
         print_r($_POST);
         echo '</pre>';
+    } else {
+        $new_concurrences = isset($_POST['concurring_justices']) ? $_POST['concurring_justices'] : array();
+        $old_concurrences = get_concurrences($db, $id);
+
+        $db->exec('BEGIN');
+        update_opinion($db, $_POST);
+        update_concurrences($db, $id, $new_concurrences, $old_concurrences);
+        $db->exec('COMMIT');
     }
-    $prev_concurrences = get_concurrences($db, $_POST['id']);
-    $db->exec('BEGIN');
-    update_opinion($db, $_POST);
-    // TODO: update concurrences
-    $db->exec('COMMIT');
 }
 
 $justices = get_justices($db);
