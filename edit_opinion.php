@@ -78,7 +78,6 @@ function update_opinion(SQLite3 $db, $post) {
     $stmt->execute();
 }
 
-
 function update_concurrences(SQLite3 $db, $opinion_id, $new_justices, $old_justices) {
     sort($new_justices);
     sort($old_justices);
