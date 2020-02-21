@@ -47,6 +47,9 @@ function get_opinion_types(SQLite3 $db) {
 }
 
 function update_opinion(SQLite3 $db, $post) {
+    // Only set the effective type when it's a concurring and dissenting opinion.
+    $effective_type_id = $post['type_id'] === '4' ? $post['effective_type_id'] : null;
+
     $sql = 'UPDATE opinions SET
                 type_id = :type_id,
                 effective_type_id = :effective_type_id,
@@ -62,7 +65,7 @@ function update_opinion(SQLite3 $db, $post) {
     $stmt = $db->prepare($sql);
 
     $stmt->bindValue(':type_id', $post['type_id']);
-    $stmt->bindValue(':effective_type_id', $post['effective_type_id']);
+    $stmt->bindValue(':effective_type_id', $effective_type_id);
     $stmt->bindValue(':authoring_justice', $post['authoring_justice']);
     if (isset($post['effective_type_flag'])) {
         $stmt->bindValue(':effective_type_flag', $post['effective_type_flag']);
@@ -142,6 +145,7 @@ if (isset($_POST['id'])) {
     } else {
         $old_concurrences = get_concurrences($db, $id);
         $new_concurrences = isset($_POST['concurring_justices']) ? $_POST['concurring_justices'] : array();
+        // The authoring justice can't concur with themselves.
         if (($key = array_search($_POST['authoring_justice'], $new_concurrences)) !== false) {
             unset($new_concurrences[$key]);
         }
