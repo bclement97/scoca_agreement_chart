@@ -156,6 +156,7 @@ $opinion = get_opinion($db, $id);
 ?>
 
 <h1>Opinion #<?=$id?> (<?=$opinion['docket_number']?>)</h1>
+<h2><?=strtoupper($opinion_types[$opinion['type_id']])?> opinion by <?=$justices[$opinion['authoring_justice']]?></h2>
 
 <p>
     <a href="<?=$opinion['url']?>" target="_blank">View <?=$opinion['docket_number']?> on CourtListener</a>
