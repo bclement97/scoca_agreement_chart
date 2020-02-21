@@ -3,7 +3,7 @@ $db = new SQLite3('../.db');
 
 function row_count(SQLite3Result $result) {
     $count = 0;
-    while ($row = $result->fetchArray()) ++$count;
+    while (($row = $result->fetchArray()) !== false) ++$count;
     $result->reset();
     return $count;
 }
@@ -17,7 +17,7 @@ function result_to_table(SQLite3Result $result, $edit = null, $id_col = null) {
         $table .= "<th>$col_name</th>";
     }
     $table .= '</thead><tbody>';
-    while ($row = $result->fetchArray(SQLITE3_ASSOC)) {
+    while (($row = $result->fetchArray(SQLITE3_ASSOC)) !== false) {
         $table .= '<tr>';
         foreach ($row as $col => $val) {
             if ($val === null) $val = "NULL";
