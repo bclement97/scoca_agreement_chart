@@ -140,8 +140,11 @@ if (isset($_POST['id'])) {
         print_r($_POST);
         echo '</pre>';
     } else {
-        $new_concurrences = isset($_POST['concurring_justices']) ? $_POST['concurring_justices'] : array();
         $old_concurrences = get_concurrences($db, $id);
+        $new_concurrences = isset($_POST['concurring_justices']) ? $_POST['concurring_justices'] : array();
+        if (($key = array_search($_POST['authoring_justice'], $new_concurrences)) !== false) {
+            unset($new_concurrences[$key]);
+        }
 
         $db->exec('BEGIN');
         update_opinion($db, $_POST);
