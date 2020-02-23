@@ -149,10 +149,10 @@ if (isset($_POST['id'])) {
             unset($new_concurrences[$key]);
         }
 
-        $db->exec('BEGIN');
+        $db->exec('BEGIN TRANSACTION');
         update_opinion($db, $_POST);
         update_concurrences($db, $id, $new_concurrences, $old_concurrences);
-        $db->exec('COMMIT');
+        $db->exec('COMMIT TRANSACTION');
     }
 }
 
