@@ -1,6 +1,8 @@
 <?php
-require_once 'db.php';
+require_once 'lib/db.php';
+require_once 'lib/html.php';
 
+$db = connect();
 /*
  * The flagged case filings' ordering below (no_opinions_flag DESC, ends_in_letter_flag)
  * reveals an interesting relationship between the docket numbers and the flags.
@@ -23,7 +25,6 @@ WHERE no_concurrences_flag = 1 OR effective_type_flag = 1
 ORDER BY effective_type_flag DESC, no_concurrences_flag DESC, docket_number, type_id, effective_type_id
 SQL
 );
-$db->close();
 ?>
 
 <style>
@@ -56,3 +57,5 @@ if (row_count($flagged_opinions)) {
 } else {
     echo '<p>No flagged opinions.</p>';
 }
+
+$db->close();

@@ -1,50 +1,7 @@
 <?php
-require_once 'db.php';
-
-function get_opinion(SQLite3 $db, $id) {
-    $stmt = $db->prepare(
-        'SELECT 
-            o.id, o.docket_number, o.type_id, o.effective_type_id, 
-            o.authoring_justice, o.effective_type_flag, o.no_concurrences_flag,
-            cf.url
-        FROM opinions o
-        JOIN case_filings cf ON o.docket_number = cf.docket_number
-        WHERE id = :id'
-    );
-    $stmt->bindValue(':id', $id);
-    $row = $stmt->execute()->fetchArray(SQLITE3_ASSOC);
-    $row['concurring_justices'] = get_concurrences($db, $id);
-    return $row;
-}
-
-function get_concurrences(SQLite3 $db, $opinion_id) {
-    $stmt = $db->prepare('SELECT justice FROM concurrences WHERE opinion_id = :id');
-    $stmt->bindValue(':id', $opinion_id);
-    $result = $stmt->execute();
-    $justices = array();
-    while (($row = $result->fetchArray(SQLITE3_ASSOC)) !== false) {
-        $justices[] = $row['justice'];
-    }
-    return $justices;
-}
-
-function get_justices(SQLite3 $db) {
-    $result = $db->query('SELECT shorthand, fullname FROM justices');
-    $justices = array();
-    while (($row = $result->fetchArray(SQLITE3_ASSOC)) !== false) {
-        $justices[$row['shorthand']] = $row['fullname'];
-    }
-    return $justices;
-}
-
-function get_opinion_types(SQLite3 $db) {
-    $result = $db->query('SELECT id, type FROM opinion_types');
-    $opinion_types = array();
-    while (($row = $result->fetchArray(SQLITE3_ASSOC)) !== false) {
-        $opinion_types[$row['id']] = $row['type'];
-    }
-    return $opinion_types;
-}
+require_once 'lib/db.php';
+require_once 'lib/html.php';
+require_once 'lib/opinions.php';
 
 function update_opinion(SQLite3 $db, $post) {
     // Only set the effective type when it's a concurring and dissenting opinion.
@@ -103,41 +60,12 @@ function update_concurrences(SQLite3 $db, $opinion_id, $new_justices, $old_justi
     }
 }
 
-function array_to_select($arr, $name, $selected = null, $multi = false) {
-    assert(is_array($selected) === $multi);
-
-    $select = '<select ';
-    if ($multi) {
-        $name .= '[]'; // Allows all selected values to be submitted.
-        $select .= 'size="' . sizeof($arr) . '" multiple ';
-    }
-    $select .= "name='$name'>";
-    foreach ($arr as $key => $val) {
-        $select .= "<option value='$key'";
-        if ($selected !== null && (($multi && in_array($key, $selected, true)) || $selected === $key)) {
-            $select .= ' selected';
-        }
-        $select .= ">$key - $val</option>";
-    }
-    $select .= '</select>';
-    return $select;
-}
-
-function flag_to_checkbox($flag) {
-    return "<input type='checkbox' name='$flag' value='0' /> $flag";
-}
-
-if (isset($_GET['id'])) {
-    $id = $_GET['id'];
-} else {
-    echo 'ID is not set.';
-    die();
-}
+$db = connect();
 
 if (isset($_POST['id'])) {
-    if ($_POST['id'] !== $id) {
-        echo '<p>ERROR: IDs provided by GET and POST do not match.</p>';
-    } else if (!isset($_POST['type_id'], $_POST['effective_type_id'], $_POST['authoring_justice'])) {
+    $id = $_POST['id'];
+
+    if (!isset($_POST['type_id'], $_POST['effective_type_id'], $_POST['authoring_justice'])) {
         echo '<p>ERROR: Could not update, a required field is missing</p><pre>';
         print_r($_POST);
         echo '</pre>';
@@ -154,6 +82,11 @@ if (isset($_POST['id'])) {
         update_concurrences($db, $id, $new_concurrences, $old_concurrences);
         $db->exec('COMMIT TRANSACTION');
     }
+} else if (isset($_GET['id'])) {
+    $id = $_GET['id'];
+} else {
+    $db->close();
+    exit('ID is not set.');
 }
 
 $justices = get_justices($db);

@@ -1,13 +1,4 @@
 <?php
-$db = new SQLite3('../.db');
-
-function row_count(SQLite3Result $result) {
-    $count = 0;
-    while (($row = $result->fetchArray()) !== false) ++$count;
-    $result->reset();
-    return $count;
-}
-
 function result_to_table(SQLite3Result $result, $edit = null, $id_col = null) {
     assert(is_null($edit) === is_null($id_col));
 
@@ -33,3 +24,28 @@ function result_to_table(SQLite3Result $result, $edit = null, $id_col = null) {
     $table .= '</tbody></table>';
     return $table;
 }
+
+function array_to_select($arr, $name, $selected = null, $multi = false) {
+    assert(is_array($selected) === $multi);
+
+    $select = '<select ';
+    if ($multi) {
+        $name .= '[]'; // Allows all selected values to be submitted.
+        $select .= 'size="' . sizeof($arr) . '" multiple ';
+    }
+    $select .= "name='$name'>";
+    foreach ($arr as $key => $val) {
+        $select .= "<option value='$key'";
+        if ($selected !== null && (($multi && in_array($key, $selected, true)) || $selected === $key)) {
+            $select .= ' selected';
+        }
+        $select .= ">$key - $val</option>";
+    }
+    $select .= '</select>';
+    return $select;
+}
+
+function flag_to_checkbox($flag) {
+    return "<input type='checkbox' name='$flag' value='0' /> $flag";
+}
+
