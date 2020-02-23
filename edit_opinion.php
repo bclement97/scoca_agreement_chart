@@ -159,6 +159,7 @@ if (isset($_POST['id'])) {
 $justices = get_justices($db);
 $opinion_types = get_opinion_types($db);
 $opinion = get_opinion($db, $id);
+$db->close();
 ?>
 
 <h1>Opinion #<?=$id?> (<?=$opinion['docket_number']?>)</h1>

@@ -23,6 +23,7 @@ WHERE no_concurrences_flag = 1 OR effective_type_flag = 1
 ORDER BY effective_type_flag DESC, no_concurrences_flag DESC, docket_number, type_id, effective_type_id
 SQL
 );
+$db->close();
 ?>
 
 <style>
