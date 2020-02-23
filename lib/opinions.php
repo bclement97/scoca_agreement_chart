@@ -15,6 +15,21 @@ function get_opinion(SQLite3 $db, $id) {
     return $row;
 }
 
+function get_opinions(SQLite3 $db, $docket_number) {
+    $stmt = $db->prepare(
+        'SELECT id, type_id, authoring_justice
+        FROM opinions
+        WHERE docket_number = :docket_number'
+    );
+    $stmt->bindValue(':docket_number', $docket_number);
+    $result = $stmt->execute();
+    $opinions = array();
+    while (($row = $result->fetchArray(SQLITE3_ASSOC)) !== false) {
+        $opinions[$row['id']] = $row;
+    }
+    return $opinions;
+}
+
 function get_concurrences(SQLite3 $db, $opinion_id) {
     $stmt = $db->prepare('SELECT justice FROM concurrences WHERE opinion_id = :id');
     $stmt->bindValue(':id', $opinion_id);
