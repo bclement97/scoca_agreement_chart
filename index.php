@@ -27,35 +27,44 @@ SQL
 );
 ?>
 
-<style>
-table {
-    border-collapse: collapse;
-}
-table, th, td {
-    border: 1px solid black;
-}
-th, td {
-    padding: 5px;
-}
-</style>
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+    table {
+         border-collapse: collapse;
+    }
 
-<h1>SCOCA Agreement Chart Admin Interface</h1>
+    table, th, td {
+        border: 1px solid black;
+    }
 
-<h2>Flagged Case Filings</h2>
-<?php
-if (row_count($flagged_case_filings)) {
-    echo result_to_table($flagged_case_filings, 'edit_case_filing.php?%s=%s', 'docket_number');
-} else {
-    echo '<p>No flagged case filings.</p>';
-}
-?>
+    th, td {
+        padding: 5px;
+    }
+    </style>
+</head>
+<body>
+    <h1>SCOCA Agreement Chart Admin Interface</h1>
 
-<h2>Flagged Opinions</h2>
-<?php
-if (row_count($flagged_opinions)) {
-    echo result_to_table($flagged_opinions, 'edit_opinion.php?%s=%s', 'id');
-} else {
-    echo '<p>No flagged opinions.</p>';
-}
+    <h2>Flagged Case Filings</h2>
+    <?php
+    if (row_count($flagged_case_filings)) {
+        echo result_to_table($flagged_case_filings, 'edit_case_filing.php?%s=%s', 'docket_number');
+    } else {
+        echo '<p>No flagged case filings.</p>';
+    }
+    ?>
 
-$db->close();
+    <h2>Flagged Opinions</h2>
+    <?php
+    if (row_count($flagged_opinions)) {
+        echo result_to_table($flagged_opinions, 'edit_opinion.php?%s=%s', 'id');
+    } else {
+        echo '<p>No flagged opinions.</p>';
+    }
+
+    $db->close();
+    ?>
+</body>
+</html>

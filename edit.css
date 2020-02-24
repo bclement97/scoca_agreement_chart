@@ -1,0 +1,13 @@
+th, td {
+    vertical-align: top;
+    text-align: left;
+}
+
+ul.no-bullet {
+    margin: 0;
+    padding: 0;
+}
+
+ul.no-bullet li {
+    list-style: none;
+}

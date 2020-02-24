@@ -95,43 +95,67 @@ $opinion = get_opinion($db, $id);
 $db->close();
 ?>
 
-<h1>Opinion #<?=$id?> (<?=$opinion['docket_number']?>)</h1>
-<h2><?=strtoupper($opinion_types[$opinion['type_id']])?> opinion by <?=$justices[$opinion['authoring_justice']]?></h2>
+<!DOCTYPE html>
+<html>
+<head>
+    <link rel="stylesheet" type="text/css" href="edit.css">
+</head>
+<body>
+    <h1>Opinion #<?=$id?> (<?=$opinion['docket_number']?>)</h1>
+    <h2><?=strtoupper($opinion_types[$opinion['type_id']])?> opinion by <?=$justices[$opinion['authoring_justice']]?></h2>
 
-<p>
-    <a href="<?=$opinion['url']?>" target="_blank">View <?=$opinion['docket_number']?> on CourtListener</a>
-</p>
+    <p>
+        <a href="<?=$opinion['url']?>" target="_blank">View <?=$opinion['docket_number']?> on CourtListener</a>
+    </p>
 
-<form action="" method="post">
-    <input type="hidden" name="id" value="<?=$id?>" />
-    <div>
-        FLAGS: (check to clear)
-        <ul>
-            <?php
-            if ($opinion['effective_type_flag'] === 1) echo '<li>' . flag_to_checkbox('effective_type_flag') . '</li>';
-            if ($opinion['no_concurrences_flag'] === 1) echo '<li>' . flag_to_checkbox('no_concurrences_flag') . '</li>';
-            ?>
-        </ul>
-    </div>
-    <div>
-        TYPE:
-        <?=array_to_select($opinion_types, 'type_id', $opinion['type_id'])?>
-    </div>
-    <div>
-        EFFECTIVE TYPE:
-        <?=array_to_select($opinion_types, 'effective_type_id', $opinion['effective_type_id'])?>
-        (ignored when TYPE is <strong>NOT</strong> concurring and dissenting)</div>
-    <div>
-        AUTHORING JUSTICE:
-        <?=array_to_select($justices, 'authoring_justice', $opinion['authoring_justice'])?>
-    </div>
-    <div>
-        CONCURRING JUSTICE(S):
-        <?=array_to_select($justices, 'concurring_justices', $opinion['concurring_justices'], true)?>
-        (if AUTHORING JUSTICE is selected, it will be ignored)
-    </div>
-    <div>
-        <input type="submit" value="Submit" />
-        <input type="reset" value="Reset" />
-    </div>
-</form>
+    <form action="" method="post">
+        <input type="hidden" name="id" value="<?=$id?>" />
+        <table>
+            <tr>
+                <th>FLAGS: (check to clear)</th>
+                <td>
+                    <ul class="no-bullet">
+                        <?php
+                        if ($opinion['effective_type_flag'] === 1) echo '<li>' . flag_to_checkbox('effective_type_flag') . '</li>';
+                        if ($opinion['no_concurrences_flag'] === 1) echo '<li>' . flag_to_checkbox('no_concurrences_flag') . '</li>';
+                        ?>
+                    </ul>
+                </td>
+            </tr>
+            <tr>
+                <th>TYPE:</th>
+                <td>
+                    <?=array_to_select($opinion_types, 'type_id', $opinion['type_id'])?>
+                </td>
+            </tr>
+            <tr>
+                <th>EFFECTIVE TYPE:</th>
+                <td>
+                    <?=array_to_select($opinion_types, 'effective_type_id', $opinion['effective_type_id'])?>
+                    (ignored when TYPE is <strong>NOT</strong> concurring and dissenting)
+                </td>
+            </tr>
+            <tr>
+                <th>AUTHORING JUSTICE:</th>
+                <td>
+                    <?=array_to_select($justices, 'authoring_justice', $opinion['authoring_justice'])?>
+                </td>
+            </tr>
+            <tr>
+                <th>CONCURRING JUSTICE(S):</th>
+                <td>
+                    <?=array_to_select($justices, 'concurring_justices', $opinion['concurring_justices'], true)?>
+                    (if AUTHORING JUSTICE is selected, it will be ignored)
+                </td>
+            </tr>
+            <tr>
+                <td></td>
+                <td>
+                    <input type="submit" value="Submit" />
+                    <input type="reset" value="Reset" />
+                </td>
+            </tr>
+        </table>
+    </form>
+</body>
+</html>
