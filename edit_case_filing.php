@@ -134,42 +134,44 @@ $db->close();
             echo "<h2>$alt_docket_number is not in the database.</h2>";
         } else {
             ?>
-            <h2>Case Filing <?= $alt_docket_number ?></h2>
+            <div class="alt-case-filing">
+                <h2>Case Filing <?= $alt_docket_number ?></h2>
 
-            <table>
-                <tr>
-                    <th>URL:</th>
-                    <td>
-                        <a href="<?= $alt_case_filing['url'] ?>" target="_blank">
-                            <?= $alt_case_filing['url'] ?>
-                        </a>
-                    </td>
-                </tr>
-                <tr>
-                    <th>SHA1:</th>
-                    <td>
-                        <?= $alt_case_filing['sha1'] ?>
-                    </td>
-                </tr>
-                <tr>
-                    <th>FILED ON:</th>
-                    <td>
-                        <?= $alt_case_filing['filed_on'] ?>
-                    </td>
-                </tr>
-                <tr>
-                    <th>ADDED ON:</th>
-                    <td>
-                        <?= $alt_case_filing['added_on'] ?>
-                    </td>
-                </tr>
-                <tr>
-                    <th>OPINIONS:</th>
-                    <td>
-                        <?=opinions_to_list($alt_case_filing['opinions'])?>
-                    </td>
-                </tr>
-            </table>
+                <table>
+                    <tr>
+                        <th>URL:</th>
+                        <td>
+                            <a href="<?= $alt_case_filing['url'] ?>" target="_blank">
+                                <?= $alt_case_filing['url'] ?>
+                            </a>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>SHA1:</th>
+                        <td>
+                            <?= $alt_case_filing['sha1'] ?>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>FILED ON:</th>
+                        <td>
+                            <?= $alt_case_filing['filed_on'] ?>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>ADDED ON:</th>
+                        <td>
+                            <?= $alt_case_filing['added_on'] ?>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>OPINIONS:</th>
+                        <td>
+                            <?=opinions_to_list($alt_case_filing['opinions'])?>
+                        </td>
+                    </tr>
+                </table>
+            </div>
             <?php
         }
     }
