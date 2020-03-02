@@ -28,7 +28,8 @@ CREATE TABLE case_filings (
     reviewed_on         TIMESTAMP                                   DEFAULT NULL,
 -- Flags
     ends_in_letter_flag INTEGER                                     DEFAULT 0,
-    no_opinions_flag    INTEGER                                     DEFAULT 0
+    no_opinions_flag    INTEGER                                     DEFAULT 0,
+    exclude_from_chart  INTEGER                                     DEFAULT 0
 );
 
 CREATE INDEX IDX_CaseFilings_PublishedOn

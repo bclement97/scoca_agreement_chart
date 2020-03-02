@@ -38,6 +38,12 @@ def build():
         WHERE docket_number NOT IN (
             SELECT *
             FROM docket_numbers_end_in_letter
+            
+            UNION
+            
+            SELECT docket_number
+            FROM case_filings
+            WHERE exclude_from_chart = 1
         );
     """
     secondary_opinions_sql = """
