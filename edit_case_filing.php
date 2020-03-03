@@ -42,12 +42,12 @@ function print_case_filing($case_filing, $is_alt = false) {
     echo "Case Filing {$case_filing['docket_number']}";
     echo (!$is_alt ? '</h1>' : '</h2>');
     ?>
-    <form action="" method="post">
-        <input type="hidden" name="docket_number" value="<?=$case_filing['docket_number']?>" />
-        <table>
-            <tr>
-                <th>FLAGS:</th>
-                <td>
+    <table>
+        <tr>
+            <th>FLAGS:</th>
+            <td>
+                <form action="" method="post">
+                    <input type="hidden" name="docket_number" value="<?=$case_filing['docket_number']?>" />
                     <table>
                         <?php
                         foreach (['exclude_from_chart', 'ends_in_letter_flag', 'no_opinions_flag'] as $flag) {
@@ -67,11 +67,9 @@ function print_case_filing($case_filing, $is_alt = false) {
                             </td>
                         </tr>
                     </table>
-                </td>
-            </tr>
-        </table>
-    </form>
-    <table>
+                </form>
+            </td>
+        </tr>
         <tr>
             <th>URL:</th>
             <td>
