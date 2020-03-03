@@ -139,7 +139,7 @@ if (isset($_GET['docket_number'])) {
 $justices = get_justices($db);
 $opinion_types = get_opinion_types($db);
 $case_filing = get_case_filing($db, $docket_number);
-if ($case_filing['ends_in_letter_flag'] === 1) {
+if (ctype_alpha(substr($docket_number, -1))) {
     $alt_docket_number = substr($docket_number, 0, -1);
     $alt_case_filing = get_case_filing($db, $alt_docket_number);
 } else {
