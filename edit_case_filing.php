@@ -31,7 +31,7 @@ function opinions_to_list($opinions) {
     foreach ($opinions as $id => $opinion) {
         $type = strtoupper($opinion_types[$opinion['type_id']]);
         $justice = $justices[$opinion['authoring_justice']];
-        $ul .= "<li>$type opinion by $justice</li>";
+        $ul .= "<li><a href='edit_opinion.php?id=$id' target='_blank'>($id) $type opinion by $justice</a></li>";
     }
     $ul .= '</ul>';
     return $ul;
