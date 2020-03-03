@@ -48,18 +48,25 @@ function print_case_filing($case_filing, $is_alt = false) {
             <tr>
                 <th>FLAGS:</th>
                 <td>
-                    <ul class="no-bullet">
-                        <li><?=flag_to_radio('exclude_from_chart', $case_filing['exclude_from_chart'])?></li>
-                        <li><?=flag_to_radio('ends_in_letter_flag', $case_filing['ends_in_letter_flag'])?></li>
-                        <li><?=flag_to_radio('no_opinions_flag', $case_filing['no_opinions_flag'])?></li>
-                    </ul>
-                </td>
-            </tr>
-            <tr>
-                <td></td>
-                <td>
-                    <input type="submit" value="Submit" />
-                    <input type="reset" value="Reset" />
+                    <table>
+                        <?php
+                        foreach (['exclude_from_chart', 'ends_in_letter_flag', 'no_opinions_flag'] as $flag) {
+                            ?>
+                            <tr>
+                                <td><?=$flag?></td>
+                                <td><?=flag_to_radio($flag, $case_filing[$flag])?></td>
+                            </tr>
+                            <?php
+                        }
+                        ?>
+                        <tr>
+                            <td></td>
+                            <td>
+                                <input type="submit" value="Submit" />
+                                <input type="reset" value="Reset" />
+                            </td>
+                        </tr>
+                    </table>
                 </td>
             </tr>
         </table>

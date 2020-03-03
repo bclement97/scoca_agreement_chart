@@ -50,7 +50,7 @@ function flag_to_checkbox($flag) {
 }
 
 function flag_to_radio($flag, $value) {
-    $radio = "$flag: <input type='radio' name='$flag' value='1'";
+    $radio = "<input type='radio' name='$flag' value='1'";
     if ($value === 1) $radio .= ' checked';
     $radio .= " /> Set <input type='radio' name='$flag' value='0'";
     if ($value === 0) $radio .= ' checked';
