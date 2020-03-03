@@ -1,7 +1,11 @@
+table {
+    border-collapse: collapse;
+}
+
 th, td {
     vertical-align: top;
     text-align: left;
-    padding: 2px;
+    padding: 0 3px 4px;
 }
 
 ul.no-bullet {
