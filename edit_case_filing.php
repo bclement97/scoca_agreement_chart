@@ -109,7 +109,24 @@ function print_case_filing($case_filing, $is_alt = false) {
 $db = connect();
 
 if (isset($_POST['docket_number'])) {
-    // TODO: update
+    if (!isset($_POST['exclude_from_chart'], $_POST['ends_in_letter_flag'], $_POST['no_opinions_flag'])) {
+        echo '<p>ERROR: Could not update, a required field is missing</p><pre>';
+        print_r($_POST);
+        echo '</pre>';
+    } else {
+        $stmt = $db->prepare(
+            'UPDATE case_filings SET
+                exclude_from_chart = :exclude_from_chart,
+                ends_in_letter_flag = :ends_in_letter_flag,
+                no_opinions_flag = :no_opinions_flag
+            WHERE docket_number = :docket_number'
+        );
+        $stmt->bindValue(':exclude_from_chart', $_POST['exclude_from_chart']);
+        $stmt->bindValue(':ends_in_letter_flag', $_POST['ends_in_letter_flag']);
+        $stmt->bindValue(':no_opinions_flag', $_POST['no_opinions_flag']);
+        $stmt->bindValue(':docket_number', $_POST['docket_number']);
+        $stmt->execute();
+    }
 }
 
 if (isset($_GET['docket_number'])) {
