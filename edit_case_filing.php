@@ -50,14 +50,7 @@ function print_case_filing($case_filing, $is_alt = false) {
                     <input type="hidden" name="docket_number" value="<?=$case_filing['docket_number']?>" />
                     <table>
                         <?php
-                        foreach (['exclude_from_chart', 'ends_in_letter_flag', 'no_opinions_flag'] as $flag) {
-                            ?>
-                            <tr>
-                                <td><?=$flag?></td>
-                                <td><?=flag_to_radio($flag, $case_filing[$flag])?></td>
-                            </tr>
-                            <?php
-                        }
+                        echo flags_to_rows($case_filing, 'exclude_from_chart', 'ends_in_letter_flag', 'no_opinions_flag');
                         ?>
                         <tr>
                             <td></td>

@@ -58,3 +58,16 @@ function flag_to_radio($flag, $value) {
     return $radio;
 }
 
+function flags_to_rows( /* $obj, ...$flags */ ) {
+    $args = func_get_args();
+    $obj = $args[0];
+    $flags = array_slice($args, 1);
+
+    $rows = '';
+    foreach ($flags as $flag) {
+        $radio = flag_to_radio($flag, $obj[$flag]);
+        $rows .= "<tr><td>$flag</td><td>$radio</td></tr>";
+    }
+    return $rows;
+}
+
