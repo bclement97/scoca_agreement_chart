@@ -45,10 +45,6 @@ function array_to_select($arr, $name, $selected = null, $multi = false) {
     return $select;
 }
 
-function flag_to_checkbox($flag) {
-    return "<input type='checkbox' name='$flag' value='0' /> $flag";
-}
-
 function flag_to_radio($flag, $value) {
     $radio = "<input type='radio' name='$flag' value='1'";
     if ($value === 1) $radio .= ' checked';
