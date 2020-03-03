@@ -7,31 +7,21 @@ function update_opinion(SQLite3 $db, $post) {
     // Only set the effective type when it's a concurring and dissenting opinion.
     $effective_type_id = $post['type_id'] === '4' ? $post['effective_type_id'] : null;
 
-    $sql = 'UPDATE opinions SET
-                type_id = :type_id,
-                effective_type_id = :effective_type_id,
-                authoring_justice = :authoring_justice';
-    if (isset($post['effective_type_flag'])) {
-        $sql .= ', effective_type_flag = :effective_type_flag';
-    }
-    if (isset($post['no_concurrences_flag'])) {
-        $sql .= ', no_concurrences_flag = :no_concurrences_flag';
-    }
-    $sql .= ' WHERE id = :id';
-
-    $stmt = $db->prepare($sql);
-
+    $stmt = $db->prepare(
+        'UPDATE opinions SET
+            type_id = :type_id,
+            effective_type_id = :effective_type_id,
+            authoring_justice = :authoring_justice,
+            effective_type_flag = :effective_type_flag,
+            no_concurrences_flag = :no_concurrences_flag
+        WHERE id = :id'
+    );
     $stmt->bindValue(':type_id', $post['type_id']);
     $stmt->bindValue(':effective_type_id', $effective_type_id);
     $stmt->bindValue(':authoring_justice', $post['authoring_justice']);
-    if (isset($post['effective_type_flag'])) {
-        $stmt->bindValue(':effective_type_flag', $post['effective_type_flag']);
-    }
-    if (isset($post['no_concurrences_flag'])) {
-        $stmt->bindValue(':no_concurrences_flag', $post['no_concurrences_flag']);
-    }
+    $stmt->bindValue(':effective_type_flag', $post['effective_type_flag']);
+    $stmt->bindValue(':no_concurrences_flag', $post['no_concurrences_flag']);
     $stmt->bindValue(':id', $post['id']);
-
     $stmt->execute();
 }
 
@@ -65,7 +55,8 @@ $db = connect();
 if (isset($_POST['id'])) {
     $id = $_POST['id'];
 
-    if (!isset($_POST['type_id'], $_POST['effective_type_id'], $_POST['authoring_justice'])) {
+    if (!isset($_POST['type_id'], $_POST['effective_type_id'], $_POST['authoring_justice'],
+               $_POST['effective_type_flag'], $_POST['no_concurrences_flag'])) {
         echo '<p>ERROR: Could not update, a required field is missing</p><pre>';
         print_r($_POST);
         echo '</pre>';
@@ -112,14 +103,13 @@ $db->close();
         <input type="hidden" name="id" value="<?=$id?>" />
         <table>
             <tr>
-                <th>FLAGS: (check to clear)</th>
+                <th>FLAGS:</th>
                 <td>
-                    <ul class="no-bullet">
+                    <table>
                         <?php
-                        if ($opinion['effective_type_flag'] === 1) echo '<li>' . flag_to_checkbox('effective_type_flag') . '</li>';
-                        if ($opinion['no_concurrences_flag'] === 1) echo '<li>' . flag_to_checkbox('no_concurrences_flag') . '</li>';
+                        echo flags_to_rows($opinion, 'effective_type_flag', 'no_concurrences_flag');
                         ?>
-                    </ul>
+                    </table>
                 </td>
             </tr>
             <tr>
