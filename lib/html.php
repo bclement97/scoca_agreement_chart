@@ -26,7 +26,7 @@ function result_to_table(SQLite3Result $result, $edit_href = null, $id_col = nul
             if ($val === null) $val = "NULL";
             if ($edit_href !== null && $col === $id_col) {
                 $uri = sprintf($edit_href, $id_col, $val);
-                $table .= "<td><a href='$uri'>$val</a></td>";
+                $table .= "<td><a href='$uri' target='_blank'>$val</a></td>";
             } else {
                 $table .= "<td>$val</td>";
             }
