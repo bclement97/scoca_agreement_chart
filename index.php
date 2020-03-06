@@ -36,6 +36,7 @@ SQL
     <h1>SCOCA Agreement Chart Admin Interface</h1>
 
     <h2>Flagged Case Filings</h2>
+    <a href="all_case_filings.php">View all</a>
     <?php
     if (row_count($flagged_case_filings)) {
         echo result_to_table($flagged_case_filings, 'edit_case_filing.php?%s=%s', 'docket_number');
@@ -45,6 +46,7 @@ SQL
     ?>
 
     <h2>Flagged Opinions</h2>
+    <a href="all_opinions.php">View all</a>
     <?php
     if (row_count($flagged_opinions)) {
         echo result_to_table($flagged_opinions, 'edit_opinion.php?%s=%s', 'id');
