@@ -29,14 +29,14 @@ OPINION_SECONDARY
 import re
 
 # Matches and returns the name of a Justice
-_JUSTICE = r'Justice ([^.,]+?)'
+_JUSTICE = r'Justice (.+?)'
 # Matches and returns the name of the authoring Justice of the opinion.
 _OPINION_AUTHOR = r'(?:Chief )?' + _JUSTICE + ' (?:authored|filed) '
 # Matches and returns the name(s) of the Justice(s) who concur(s) with
 # an opinion. A match with multiple Justices should be in the form of
 # 'X and Y' or 'X, Y, [...] and Z'.
 _OPINION_CONCURRING = (r',? in which (?:Chief ' + _JUSTICE
-                       + ' and )?Justices? ([^.]+?) concurred')
+                       + ' and )?Justices? (.+?) concurred')
 
 # Matches and returns the names of the authoring Justice of the majority
 # opinion and those who concur with it.
