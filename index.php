@@ -30,19 +30,7 @@ SQL
 <!DOCTYPE html>
 <html>
 <head>
-    <style>
-    table {
-         border-collapse: collapse;
-    }
-
-    table, th, td {
-        border: 1px solid black;
-    }
-
-    th, td {
-        padding: 5px;
-    }
-    </style>
+    <link rel="stylesheet" type="text/css" href="styles/index.css">
 </head>
 <body>
     <h1>SCOCA Agreement Chart Admin Interface</h1>

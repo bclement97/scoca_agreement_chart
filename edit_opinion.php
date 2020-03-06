@@ -89,7 +89,7 @@ $db->close();
 <!DOCTYPE html>
 <html>
 <head>
-    <link rel="stylesheet" type="text/css" href="edit.css">
+    <link rel="stylesheet" type="text/css" href="styles/edit.css">
 </head>
 <body>
     <h1>Opinion #<?=$id?> (<?=$opinion['docket_number']?>)</h1>
