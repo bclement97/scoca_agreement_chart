@@ -1,4 +1,12 @@
 <?php
+/** Helper functions for getting array objects analogous to the models of the CLI. */
+
+/**
+ * @param \SQLite3 $db The database connection.
+ * @param string   $docket_number The docket number of the case filing to get.
+ *
+ * @return array|false The case filing as an array, or false if no case filing exists under DOCKET_NUMBER.
+ */
 function get_case_filing(SQLite3 $db, $docket_number) {
     $stmt = $db->prepare(
         'SELECT 
@@ -16,6 +24,12 @@ function get_case_filing(SQLite3 $db, $docket_number) {
     return $row;
 }
 
+/**
+ * @param \SQLite3   $db The database connection.
+ * @param integer    $id The ID of the opinion to get.
+ *
+ * @return array|false The opinion as an array, or false if no opinion exists under ID.
+ */
 function get_opinion(SQLite3 $db, $id) {
     $stmt = $db->prepare(
         'SELECT 
@@ -32,6 +46,12 @@ function get_opinion(SQLite3 $db, $id) {
     return $row;
 }
 
+/**
+ * @param \SQLite3 $db The database connection.
+ * @param string   $docket_number The docket number of the case filing for which to get all opinions.
+ *
+ * @return array An array of opinions indexed by opinion ID.
+ */
 function get_opinions(SQLite3 $db, $docket_number) {
     $stmt = $db->prepare(
         'SELECT id, type_id, authoring_justice
@@ -47,6 +67,12 @@ function get_opinions(SQLite3 $db, $docket_number) {
     return $opinions;
 }
 
+/**
+ * @param \SQLite3   $db The database connection.
+ * @param integer    $opinion_id The opinion ID for which to get concurrences.
+ *
+ * @return array An array of justice IDs who concur with the opinion.
+ */
 function get_concurrences(SQLite3 $db, $opinion_id) {
     $stmt = $db->prepare('SELECT justice FROM concurrences WHERE opinion_id = :id');
     $stmt->bindValue(':id', $opinion_id);
@@ -58,6 +84,11 @@ function get_concurrences(SQLite3 $db, $opinion_id) {
     return $justices;
 }
 
+/**
+ * @param \SQLite3 $db The database connection.
+ *
+ * @return array An array of ID => Opinion type string
+ */
 function get_opinion_types(SQLite3 $db) {
     $result = $db->query('SELECT id, type FROM opinion_types');
     $opinion_types = array();
@@ -67,6 +98,11 @@ function get_opinion_types(SQLite3 $db) {
     return $opinion_types;
 }
 
+/**
+ * @param \SQLite3 $db The database connection.
+ *
+ * @return array An array of SHORTHAND => FULLNAME.
+ */
 function get_justices(SQLite3 $db) {
     $result = $db->query('SELECT shorthand, fullname FROM justices');
     $justices = array();
