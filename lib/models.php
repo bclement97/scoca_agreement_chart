@@ -42,7 +42,9 @@ function get_opinion(SQLite3 $db, $id) {
     );
     $stmt->bindValue(':id', $id);
     $row = $stmt->execute()->fetchArray(SQLITE3_ASSOC);
-    $row['concurring_justices'] = get_concurrences($db, $id);
+    if ($row !== false) {
+        $row['concurring_justices'] = get_concurrences($db, $id);
+    }
     return $row;
 }
 
