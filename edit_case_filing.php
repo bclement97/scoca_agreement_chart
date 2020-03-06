@@ -3,6 +3,26 @@ require_once 'lib/db.php';
 require_once 'lib/html.php';
 require_once 'lib/models.php';
 
+function update_case_filing(SQLite3 $db, $post) {
+    $stmt = $db->prepare(
+        'UPDATE case_filings SET
+                exclude_from_chart = :exclude_from_chart,
+                ends_in_letter_flag = :ends_in_letter_flag,
+                no_opinions_flag = :no_opinions_flag
+            WHERE docket_number = :docket_number'
+    );
+    $stmt->bindValue(':exclude_from_chart', $post['exclude_from_chart']);
+    $stmt->bindValue(':ends_in_letter_flag', $post['ends_in_letter_flag']);
+    $stmt->bindValue(':no_opinions_flag', $post['no_opinions_flag']);
+    $stmt->bindValue(':docket_number', $post['docket_number']);
+    $stmt->execute();
+}
+
+/**
+ * @param array $opinions An array of opinions. Usually the result of a call to get_opinions().
+ *
+ * @return string An UL of the opinions.
+ */
 function opinions_to_list($opinions) {
     global $opinion_types, $justices;
 
@@ -20,6 +40,10 @@ function opinions_to_list($opinions) {
     return $ul;
 }
 
+/**
+ * @param array $case_filing A case filing array. Usually the result of a call to get_case_filing().
+ * @param bool  $is_alt If this is not the primary case filing on the page. Used to decide if h1 or h2 should be used.
+ */
 function print_case_filing($case_filing, $is_alt = false) {
     echo (!$is_alt ? '<h1>' : '<h2>');
     echo "Case Filing {$case_filing['docket_number']}";
@@ -90,18 +114,7 @@ if (isset($_POST['docket_number'])) {
         print_r($_POST);
         echo '</pre>';
     } else {
-        $stmt = $db->prepare(
-            'UPDATE case_filings SET
-                exclude_from_chart = :exclude_from_chart,
-                ends_in_letter_flag = :ends_in_letter_flag,
-                no_opinions_flag = :no_opinions_flag
-            WHERE docket_number = :docket_number'
-        );
-        $stmt->bindValue(':exclude_from_chart', $_POST['exclude_from_chart']);
-        $stmt->bindValue(':ends_in_letter_flag', $_POST['ends_in_letter_flag']);
-        $stmt->bindValue(':no_opinions_flag', $_POST['no_opinions_flag']);
-        $stmt->bindValue(':docket_number', $_POST['docket_number']);
-        $stmt->execute();
+        update_case_filing($db, $_POST);
     }
 }
 
