@@ -1,4 +1,21 @@
 <?php
+function get_case_filing(SQLite3 $db, $docket_number) {
+    $stmt = $db->prepare(
+        'SELECT 
+            url, sha1, filed_on, added_on,
+            ends_in_letter_flag, no_opinions_flag, exclude_from_chart
+        FROM case_filings
+        WHERE docket_number = :docket_number'
+    );
+    $stmt->bindValue(':docket_number', $docket_number);
+    $row = $stmt->execute()->fetchArray(SQLITE3_ASSOC);
+    if ($row !== false) {
+        $row['docket_number'] = $docket_number;
+        $row['opinions'] = get_opinions($db, $docket_number);
+    }
+    return $row;
+}
+
 function get_opinion(SQLite3 $db, $id) {
     $stmt = $db->prepare(
         'SELECT 

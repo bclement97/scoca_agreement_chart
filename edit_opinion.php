@@ -1,7 +1,7 @@
 <?php
 require_once 'lib/db.php';
 require_once 'lib/html.php';
-require_once 'lib/opinions.php';
+require_once 'lib/models.php';
 
 function update_opinion(SQLite3 $db, $post) {
     // Only set the effective type when it's a concurring and dissenting opinion.
