@@ -120,14 +120,19 @@ if (isset($_POST['docket_number'])) {
 
 if (isset($_GET['docket_number'])) {
     $docket_number = $_GET['docket_number'];
+    $case_filing = get_case_filing($db, $docket_number);
 } else {
     $db->close();
     exit('Docket number is not set.');
 }
 
+if ($case_filing === false) {
+    $db->close();
+    exit('No case filing exists under ' . $docket_number);
+}
+
 $justices = get_justices($db);
 $opinion_types = get_opinion_types($db);
-$case_filing = get_case_filing($db, $docket_number);
 if (ctype_alpha(substr($docket_number, -1))) {
     $alt_docket_number = substr($docket_number, 0, -1);
     $alt_case_filing = get_case_filing($db, $alt_docket_number);
