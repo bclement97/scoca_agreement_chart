@@ -102,6 +102,12 @@ function print_case_filing($case_filing, $is_alt = false) {
                 <?=opinions_to_list($case_filing['opinions'])?>
             </td>
         </tr>
+        <tr>
+            <td></td>
+            <td>
+                <a href="add_opinion.php?docket_number=<?=$case_filing['docket_number']?>">Add new opinion</a>
+            </td>
+        </tr>
     </table>
     <?php
 }

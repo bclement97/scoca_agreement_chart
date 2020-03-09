@@ -82,7 +82,9 @@ function flag_to_radio($flag, $value) {
 }
 
 /**
- * @param array  $obj An array of object values. Usually just a fetched array of a SQLite3Result object.
+ * @param array $obj An array of object values. Usually just a fetched array of
+ *                   a SQLite3Result object. If null, all radio buttons will be
+ *                   set to 'unset'.
  * @param string ...$flags The flags for the given OBJ.
  *
  * @return string A TR row for each FLAGS as two radio buttons ({@see flag_to_radio()}).
@@ -94,7 +96,8 @@ function flags_to_rows( /* $obj, ...$flags */ ) {
 
     $rows = '';
     foreach ($flags as $flag) {
-        $radio = flag_to_radio($flag, $obj[$flag]);
+        $value = (is_null($obj) ? 0 : $obj[$flag]);
+        $radio = flag_to_radio($flag, $value);
         $rows .= "<tr><td>$flag</td><td>$radio</td></tr>";
     }
     return $rows;
