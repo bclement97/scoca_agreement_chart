@@ -1,4 +1,5 @@
-from time import time
+from datetime import datetime
+
 import yattag
 
 import db
@@ -121,7 +122,8 @@ def build():
         except ZeroDivisionError:
             rate_chart[key] = -1
 
-    filepath = utils.project_path('out', 'agreement_chart_{}.html'.format(int(time())))
+    date_str = datetime.now().strftime('%Y-%d-%m_%H:%M:%S')
+    filepath = utils.project_path('out', 'agreement_chart_{}.html'.format(date_str))
     with open(filepath, 'w+') as f:
         f.write(generate(rate_chart, all_justices))
         print('Exported "{}"'.format(filepath))
