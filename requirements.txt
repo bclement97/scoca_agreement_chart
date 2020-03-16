@@ -1,0 +1,13 @@
+cachecontrol ~= 0.12
+enum34 ~= 1.1
+# required by cachecontrol
+lockfile
+requests ~= 2.22
+unicodecsv ~= 0.14
+yattag ~= 1.12
+
+#apsw == 3.31.1
+git+https://github.com/rogerbinns/apsw.git#egg=apsw \
+    --global-option="fetch" --global-option="--version" \
+    --global-option="3.31.1" --global-option="--all" \
+    --global-option="build" --global-option="--enable-all-extensions"
