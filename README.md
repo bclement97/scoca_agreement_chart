@@ -22,3 +22,9 @@ python -m cli
 The SQLite3 database file will be located in the same parent directory under `.db`.
 
 The outputted chart will be located in the `out` directory.
+
+## Admin Interface
+
+https://bitbucket.org/boaltlaw/scoca_agreement_chart_admin/src/master/
+
+The admin interface must be installed in the same directory as this project.
