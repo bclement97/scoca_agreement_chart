@@ -1,5 +1,6 @@
 Dockerfile
-.cache
-.idea
-.git
+.cache/
+.idea/
+.git/
 .gitignore
+out/*
