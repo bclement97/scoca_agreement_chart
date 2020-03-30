@@ -93,7 +93,7 @@ def get_requests_header():
     if token:
         header['Authorization'] = 'Token {}'.format(token)
     else:
-        utils.warn('No Court Listener API authorization token found.')
+        utils.warn('No CourtListener API authorization token found.')
     return header
 
 
