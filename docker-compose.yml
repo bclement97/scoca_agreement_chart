@@ -2,6 +2,8 @@ version: "3.7"
 services:
   cli:
     build: ./cli
+    env_file:
+      - ./cli/config/secret.env
     environment:
       DB_FILE: .db
     volumes:
