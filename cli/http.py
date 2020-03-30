@@ -102,7 +102,10 @@ def get_response_json(response):
         response.raise_for_status()  # HTTPError
         return response.json()  # ValueError
     except requests.HTTPError as e:
-        raise NotImplementedError(e)  # TODO
+        if response.status_code == 429:
+            utils.error(e, 'API request quota reached. Is the CourtListener API token set?')
+        else:
+            raise NotImplementedError(e)  # TODO
     except ValueError as e:
         raise NotImplementedError(e)  # TODO
 
