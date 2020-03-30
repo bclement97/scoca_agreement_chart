@@ -1,7 +1,6 @@
 version: "3.7"
 services:
   cli:
-    container_name: cli
     build: ./cli
     environment:
       DB_FILE: .db
@@ -9,7 +8,6 @@ services:
       - db:/cli/.db
 
 #  admin:
-#    container_name: admin
 #    build: ./admin
 #    volumes:
 #      - db:/admin/.db
