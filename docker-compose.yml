@@ -1,0 +1,16 @@
+version: "3.7"
+services:
+  cli:
+    build: ./cli
+    environment:
+      DB_FILE: .db
+    volumes:
+      - db:/cli/.db
+
+#  admin:
+#    build: ./admin
+#    volumes:
+#      - db:/admin/.db
+
+volumes:
+  db:
