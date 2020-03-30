@@ -3,4 +3,4 @@
 *.db
 .cache/
 out/
-secret.env
+*.secret

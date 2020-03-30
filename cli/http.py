@@ -89,11 +89,10 @@ def filters_to_url_params(filter_dict, begin='?'):
 
 def get_requests_header():
     header = DEFAULT_REQUESTS_HEADER.copy()
-    token = os.environ.get('COURTLISTENER_API_TOKEN')
-    if token:
+    token_filepath = utils.project_path('config', 'courtlistener_api_token.secret')
+    with open(token_filepath, 'r', 1) as token_file:
+        token = token_file.read().strip()
         header['Authorization'] = 'Token {}'.format(token)
-    else:
-        utils.warn('No CourtListener API authorization token found.')
     return header
 
 
