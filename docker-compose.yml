@@ -4,6 +4,7 @@ services:
     build: ./cli
     environment:
       DB_FILE: .db
+      TZ: America/Los_Angeles
     volumes:
       - db:/cli/.db
 
