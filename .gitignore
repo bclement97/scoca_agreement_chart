@@ -1,6 +1,9 @@
-*.pyc
-.idea/
-*.db
 .cache/
+.idea/
 out/
-*.secret
+
+*.db
+*.pyc
+
+# DO NOT REMOVE THIS LINE
+*.token

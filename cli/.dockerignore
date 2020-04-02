@@ -1,7 +1,8 @@
-Dockerfile
-.cache/
-.idea/
-.git/
-.gitignore
+.cache
+.git
+.idea
+
 out/*
-*.secret
+
+Dockerfile
+*.pyc
