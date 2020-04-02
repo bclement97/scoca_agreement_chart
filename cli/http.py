@@ -89,7 +89,7 @@ def filters_to_url_params(filter_dict, begin='?'):
 
 def get_requests_header():
     header = DEFAULT_REQUESTS_HEADER.copy()
-    token_filepath = utils.project_path('config', 'courtlistener_api_token.secret')
+    token_filepath = utils.project_path('config', 'courtlistener_api.token')
     with open(token_filepath, 'r', 1) as token_file:
         token = token_file.read().strip()
         header['Authorization'] = 'Token {}'.format(token)
