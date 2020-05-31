@@ -1,8 +1,5 @@
 # SCOCA Agreement Chart
 
-TODO: Description
-
-
 ## Dependencies
 
 - Python 2.7
@@ -62,8 +59,16 @@ pip install [--user] -r cli/requirements.txt
 
 ## Running
 
+### CLI
+
 Navigate to the base directory.
 
 If you have docker installed, run `docker-compose up --build`. Alternatively, if you have Make installed as well, simply run `make`.
 
 Otherwise, run `python -m cli`.
+
+### Admin Interface
+
+If you started the CLI via Docker, the Admin Interface will be available at `localhost:8080`.
+
+Otherwise, you are responsible for installing this project on a web server that can render the PHP Admin Interface.
